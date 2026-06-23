@@ -37,7 +37,7 @@ def transcribe_audio(audio_bytes):
   t=groq_client.audio.transcriptions.create(file=("audio.wav",audio_bytes),model="whisper-large-v3",language="id",response_format="text",temperature=0.0).strip()
   if len(t)<3:return""
   return t
- except:return""
+ except Exception as e:toast(f"STT Error: {str(e)[:30]}","❌");return""
 def text_to_speech(text):
  if not TTS:return[]
  try:
@@ -72,6 +72,7 @@ def jawab_favion(text,image,model_type):
  intent=deteksi_intent(text)
  if intent=="lempar_fanilla":return"Soal sekolah/PR mending tanya Fanilla bro wkwk. Gw jagonya strategi & duit 💚","teman",model_type
  if intent!="ngobrol":
+  toast("Favion nyari data...","🔍")
   ref=search_web(f"{intent} {text}")
   if ref:text+=f"\n\n[Data Referensi]:\n{ref}"
  tgl=datetime.now(pytz.timezone('Asia/Jakarta')).strftime("%d %B %Y")
@@ -79,15 +80,24 @@ def jawab_favion(text,image,model_type):
  full_text=""
  try:
   if model_type=="gemini":
-   res=gemini_model.generate_content([p,image]if image else p,stream=True)
+   toast("Pake Gemini...","✨")
+   content=[p]
+   if image:content.append(image)
+   res=gemini_model.generate_content(content,stream=True)
    for c in res:
     if c.text:full_text+=c.text
   else:
+   toast("Pake Groq...","⚡")
    chat=groq_client.chat.completions.create(messages=[{"role":"user","content":p}],model="llama-3.3-70b-versatile",stream=True)
    for c in chat:
     if c.choices[0].delta.content:full_text+=c.choices[0].delta.content
+  if not full_text:return"Maaf bro, AI-nya lagi diem. Coba ganti model di sidebar.","ngobrol",model_type
   return full_text,intent,model_type
- except:return"Error bro,coba lagi ya.","ngobrol",model_type
+ except Exception as e:
+  err=str(e)
+  if"429"in err:return"Limit Gemini abis bro. Ganti ke Groq di sidebar coba.","ngobrol","groq"
+  if"quota"in err.lower():return"Quota abis bro. Coba besok atau ganti model.","ngobrol",model_type
+  return f"Error: {err[:50]}. Coba ganti model atau cek API key.","ngobrol",model_type
 with st.sidebar:
  st.markdown("### ⚙️ Manage Favion")
  m=st.selectbox("Pilih Model AI",["Gemini 2.5 Flash","Llama 3.3 70B Groq"],index=0 if st.session_state.selected_model=="gemini"else 1)
@@ -122,10 +132,8 @@ if audio:
    st.session_state.chat_count+=1
    st.session_state.messages.append({"role":"user","type":"text","content":vt})
    with st.chat_message("assistant"):
-    ph=st.empty()
     with st.spinner("Favion mikir..."):
      konten,intent,model=jawab_favion(vt,None,st.session_state.selected_model)
-     ph.empty()
    st.session_state.messages.append({"role":"assistant","type":"text","content":konten,"intent":intent,"model":model})
    st.rerun()
 prompt=st.chat_input("Tanya Favion...",accept_file=True,file_type=["jpg","jpeg","png"])
@@ -138,9 +146,7 @@ if prompt:
  if user_file:st.session_state.messages.append({"role":"user","type":"image","content":user_img})
  if user_text:st.session_state.messages.append({"role":"user","type":"text","content":user_text})
  with st.chat_message("assistant"):
-  ph=st.empty()
   with st.spinner("Favion mikir..."):
    konten,intent,model=jawab_favion(user_text,user_img,st.session_state.selected_model)
-   ph.empty()
  st.session_state.messages.append({"role":"assistant","type":"text","content":konten,"intent":intent,"model":model})
  st.rerun()
