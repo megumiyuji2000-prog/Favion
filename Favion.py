@@ -1,287 +1,140 @@
 import streamlit as st
 import google.generativeai as genai
+from groq import Groq
 from PIL import Image
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
-from duckduckgo_search import DDGS
-import pandas as pd
+import time
+import requests
+import io
+import urllib.parse
+import base64
 import re
-
-st.set_page_config(page_title="Favion AI", page_icon="🎯", layout="centered", initial_sidebar_state="collapsed")
-
-# ==================== CSS FAVION - HIJAU TOSKA MANAGER ====================
-st.markdown("""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    #MainMenu, footer, header {visibility: hidden;}
-.stApp,.main { background-color: #0A0F0D; }
-.block-container {
-        padding-top: 2rem!important;
-        padding-bottom: 8rem!important;
-        max-width: 48rem!important;
-    }
-.favion-title {
-        text-align: center;
-        font-size: 2.25rem;
-        font-weight: 700;
-        background: linear-gradient(90deg, #10B981 0%, #34D399 50%, #6EE7B7 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.25rem;
-        letter-spacing: -0.02em;
-    }
-.favion-subtitle {
-        text-align: center;
-        color: #6B7280;
-        font-size: 0.95rem;
-        margin-bottom: 3rem;
-        line-height: 1.5;
-    }
-.stChatMessage {
-        background-color: transparent!important;
-        padding: 0.75rem 0!important;
-        margin: 0!important;
-    }
-    [data-testid="stChatMessageContent"] {
-        background-color: #111827!important;
-        border-radius: 18px!important;
-        padding: 12px 16px!important;
-        color: #E5E7EB!important;
-        line-height: 1.65;
-        border: 1px solid #1F2937;
-        font-size: 0.95rem;
-    }
-.stChatMessage[data-testid*="user"] [data-testid="stChatMessageContent"] {
-        background-color: #1F2937!important;
-        border: 1px solid #374151;
-    }
-.stChatInput {
-        position: fixed!important;
-        bottom: 0!important;
-        left: 0!important;
-        right: 0!important;
-        background: linear-gradient(180deg, rgba(10,15,13,0) 0%, #0A0F0D 30%)!important;
-        padding: 1rem 1rem 1.5rem 1rem!important;
-        max-width: 48rem!important;
-        margin: 0 auto!important;
-        backdrop-filter: blur(8px);
-    }
-.stChatInput > div {
-        background-color: #111827!important;
-        border: 1px solid #10B981!important;
-        border-radius: 26px!important;
-        box-shadow: 0 4px 12px rgba(16,185,129,0.2);
-    }
-.stChatInput input { color: #E5E7EB!important; font-size: 0.95rem!important; padding: 14px 18px!important; }
-.stChatInput input::placeholder { color: #6B7280!important; }
-.stImage img { border-radius: 14px!important; border: 1px solid #1F2937; margin: 8px 0; }
-.stToast { background-color: #111827!important; border: 1px solid #10B981!important; border-radius: 12px!important; }
-.stDataFrame { border: 1px solid #1F2937!important; border-radius: 12px!important; }
-.stDataFrame thead tr th { background-color: #10B981!important; color: #0A0F0D!important; font-weight: 600!important; }
-.stDataFrame tbody tr td { background-color: #111827!important; color: #E5E7EB!important; }
-.favion-badge {
-        display: inline-block;
-        font-size: 0.75rem;
-        padding: 4px 10px;
-        border-radius: 12px;
-        margin-bottom: 8px;
-        font-weight: 600;
-        background-color: #065F46;
-        color: #A7F3D0;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ==================== INIT ====================
-try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-2.5-flash')
-except:
-    st.error("API Key belum diset bro.")
-    st.stop()
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "chat" not in st.session_state:
-    st.session_state.chat = model.start_chat(history=[])
-
-# ==================== FAVION BRAIN ====================
-def search_web(query):
-    try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(f"{query} strategi cara tips", max_results=3))
-            if results:
-                return "\n".join([f"- {r['body'][:200]}" for r in results])
-    except:
-        return ""
-    return ""
-
-def deteksi_intent(text):
-    t = text.lower()
-    if any(k in t for k in ["bisnis", "jualan", "omzet", "usaha", "umkm", "profit", "marketing", "jual"]): return "bisnis"
-    if any(k in t for k in ["konten", "instagram", "tiktok", "youtube", "channel", "posting", "fyp", "ig"]): return "kanal"
-    if any(k in t for k in ["belajar", "utbk", "ujian", "skripsi", "jadwal belajar", "fokus", "pelajaran"]): return "belajar"
-    if any(k in t for k in ["uang", "gaji", "budget", "nabung", "investasi", "keuangan", "utang", "duit"]): return "uang"
-    if any(k in t for k in ["waktu", "sibuk", "produktif", "jadwal", "todo", "deadline", "prioritas", "atur"]): return "waktu"
-    if any(k in t for k in ["soal", "hitung", "rumus", "integral", "matematika", "fisika", "kimia", "pr"]): return "lempar_fanilla"
-    return "ngobrol"
-
-def jawab_favion(text, image=None):
-    intent = deteksi_intent(text)
-
-    if intent == "lempar_fanilla":
-        yield "Waduh bro kalo soal sekolah/PR mending tanya Fanilla aja wkwk. Gw jagonya ngatur strategi & duit 💚\n\nCoba tanya gw: 'Favion, gimana cara atur waktu belajar' nah itu baru bidang gw.", "teman"
-        return
-
-    if intent!= "ngobrol":
-        with st.spinner("Favion lagi nyari strategi terbaik..."):
-            ref = search_web(f"{intent} {text}")
-            if ref:
-                text += f"\n\n[Data Referensi]:\n{ref}"
-
-    tz = pytz.timezone('Asia/Jakarta')
-    tgl = datetime.now(tz).strftime("%d %B %Y")
-
-    # PROMPT FAVION: BAHASA GAMPANG + GAUL TIPIS + SOLUTIF
-    prompt_map = {
-        "bisnis": f"""Kamu Favion, FAntastic inoVIsiON. Manager bisnis yg asik. Tanggal {tgl}.
-ATURAN BAHASA:
-1. Pake bahasa gampang dimengerti + gaul tipis. Kayak "Oke bro, biar omzet naik gini caranya" bukan "Anda harus melakukan optimasi".
-2. Langsung ke solusi. Jangan muter-muter.
-3. WAJIB pake TABEL markdown. Kolom: Strategi | Langkah Aksi | Deadline | Cara Ukur Hasil
-4. Kasih 3-5 langkah yg bisa langsung dilakuin.
-5. Panjang: 2-3 paragraf + 1 tabel. Total 15-25 baris.
-6. Tutup: "Gas eksekusi bro!" atau "Konsisten ya!"
-
-Problem user: {text}""",
-
-        "kanal": f"""Kamu Favion, FAntastic inoVIsiON. Ahli konten yg ngerti algoritma. Tanggal {tgl}.
-ATURAN BAHASA:
-1. Bahasa gampang + gaul. "Bro biar FYP kuncinya gini..."
-2. WAJIB TABEL. Kolom: Hari | Ide Konten | Hook 3 Detik | CTA | Jam Posting
-3. Kasih jadwal 7 hari.
-4. Panjang: 2 paragraf + 1 tabel. Total 15-20 baris.
-5. Tutup: "Upload rutin ya bro!"
-
-Problem user: {text}""",
-
-        "belajar": f"""Kamu Favion, FAntastic inoVIsiON. Coach belajar anti ribet. Tanggal {tgl}.
-ATURAN BAHASA:
-1. Bahasa simpel + gaul. "Bro kalo mau fokus belajar gini aja..."
-2. WAJIB TABEL. Kolom: Waktu | Ngapain | Tekniknya | Targetnya Apa
-3. Pake metode gampang: Pomodoro 25 menit, Catat Poin Penting.
-4. Panjang: 2 paragraf + 1 tabel. Total 15-20 baris.
-5. Tutup: "Disiplin ya bro, dikit-dikit lama-lama jadi!"
-
-Problem user: {text}""",
-
-        "uang": f"""Kamu Favion, FAntastic inoVIsiON. Temen yg jago atur duit. Tanggal {tgl}.
-ATURAN BAHASA:
-1. Bahasa gampang banget + gaul. "Bro duit lu gini nih biar aman..."
-2. WAJIB TABEL budget. Kolom: Buat Apa | Berapa % | Nominalnya | Catatan
-3. Pake aturan gampang: 50% Kebutuhan, 30% Keinginan, 20% Tabung.
-4. Panjang: 2 paragraf + 1 tabel. Total 15-20 baris.
-5. Tutup: "Jangan boros jajan bro!"
-
-Problem user: {text}""",
-
-        "waktu": f"""Kamu Favion, FAntastic inoVIsiON. Ahli manajemen waktu. Tanggal {tgl}.
-ATURAN BAHASA:
-1. Bahasa simpel + gaul. "Bro waktu lu bocor di sini nih..."
-2. WAJIB TABEL. Kolom: Tugas | Penting Gak? | Mendesak Gak? | Kerjain Kapan | Aksi
-3. Pake prioritas: Kerjain Sekarang, Jadwalin, Kasih ke Orang, Hapus.
-4. Panjang: 2 paragraf + 1 tabel. Total 15-20 baris.
-5. Tutup: "Fokus yg penting dulu bro!"
-
-Problem user: {text}""",
-
-        "ngobrol": f"""Kamu Favion, FAntastic inoVIsiON. Temen nongkrong yg pinter.
-ATURAN:
-1. Bahasa gaul, empati, simpel. "Wkwk sama bro" "Anjir semangat lu"
-2. PANJANG: 1-2 paragraf MAX. Pendek aja.
-3. Kalo bisa selipin 1 tips hidup kecil yg gampang.
-4. Jangan sok manager. Jadi temen aja.
-5. Jangan sebut "AI".
-
-Chat: {text}"""
-    }
-
-    prompt = prompt_map[intent]
-
-    if image:
-        prompt += "\n\nUser upload gambar. Kalo isinya jadwal/catatan/todo/tulisan, scan dan ubah jadi tabel rapi + kasih saran biar lebih efisien. Kalo foto random, komen kayak temen. Pake bahasa gampang."
-        st.toast("Favion scan gambar lu...", icon="🔍")
-    else:
-        st.toast("Favion nyusun solusi...", icon="🎯")
-
-    try:
-        if image:
-            res = st.session_state.chat.send_message([prompt, image], stream=True)
-        else:
-            res = st.session_state.chat.send_message(prompt, stream=True)
-
-        for chunk in res:
-            if chunk.text:
-                yield chunk.text, intent
-    except Exception as e:
-        if "429" in str(e):
-            yield "Limit harian abis bro. Besok jam 7 pagi reset. Rehat dulu kita 😴", "ngobrol"
-        else:
-            yield "Error bro, coba lagi ya.", "ngobrol"
-
-# ==================== UI ====================
-if len(st.session_state.messages) == 0:
-    st.markdown('<div class="favion-title">Favion AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="favion-subtitle">FAntastic inoVIsiON<br>Fantastic Problem, A Fantastic Solution<br>Manager Bisnis, Kanal, Belajar, Uang, Waktu 📸</div>', unsafe_allow_html=True)
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        if msg.get("intent") and msg["role"] == "assistant":
-            badge_map = {
-                "bisnis": "💼 Bisnis", "kanal": "📱 Kanal", "belajar": "📚 Belajar",
-                "uang": "💰 Uang", "waktu": "⏰ Waktu", "ngobrol": "💬 Ngobrol",
-                "lempar_fanilla": "🎓 Tanya Fanilla"
-            }
-            label = badge_map.get(msg["intent"], "🎯 Favion")
-            st.markdown(f'<div class="favion-badge">{label}</div>', unsafe_allow_html=True)
-
-        if msg["type"] == "image":
-            st.image(msg["content"], caption=msg.get("caption"))
-        else:
-            st.markdown(msg["content"])
-
-prompt = st.chat_input("Tanya Favion soal bisnis, kanal, belajar...", accept_file=True, file_type=["jpg", "jpeg", "png"])
-
+from duckduckgo_search import DDGS
+try:from gtts import gTTS;TTS=True
+except:TTS=False
+st.set_page_config(page_title="Favion AI",page_icon="🎯",layout="centered",initial_sidebar_state="collapsed")
+try:GEMINI_KEY=st.secrets["GEMINI_API_KEY"];GROQ_KEY=st.secrets["GROQ_API_KEY"]
+except:st.error("API Key belum diset");st.stop()
+if"messages"not in st.session_state:st.session_state.messages=[]
+if"chat_count"not in st.session_state:st.session_state.chat_count=0
+if"audio_processed_id"not in st.session_state:st.session_state.audio_processed_id=None
+if"selected_model"not in st.session_state:st.session_state.selected_model="gemini"
+MAX_CHAT=25
+T={"bg":"#0A0F0D","chat_bg":"#111827","user_bg":"#1F2937","text":"#E5E7EB","border":"#1F2937","badge_bg":"#065F46","badge_text":"#A7F3D0","primary":"#10B981"}
+BLACKLIST=["bom","senjata","bunuh","bunuh diri","teroris","narkoba","bokep","hentai","porn","seks","sex","bugil","telanjang","memek","jembut","kontol","ngentot","coli","masturbasi","ganja","sabu","ekstasi","heroin","kokain"]
+def cek_sensitif(t):
+ for k in BLACKLIST:
+  if k in t.lower():return True,k
+ return False,None
+st.markdown(f"""<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');html,body,[class*="css"]{{font-family:'Inter',sans-serif}}#MainMenu,footer,header{{visibility:hidden}}.stApp,.main{{background-color:{T['bg']}}}.block-container{{padding-top:2rem!important;padding-bottom:12rem!important;max-width:48rem!important}}.favion-title{{text-align:center;font-size:2.25rem;font-weight:700;background:linear-gradient(90deg,#10B981 0%,#34D399 50%,#6EE7B7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:0.25rem}}.favion-subtitle{{text-align:center;color:#6B7280;font-size:0.95rem;margin-bottom:3rem}}.stChatMessage{{background-color:transparent!important;padding:0.75rem 0!important}}[data-testid="stChatMessageContent"]{{background-color:{T['chat_bg']}!important;border-radius:18px!important;padding:12px 16px!important;color:{T['text']}!important;border:1px solid {T['border']};line-height:1.65}}.stChatMessage[data-testid*="user"] [data-testid="stChatMessageContent"]{{background-color:{T['user_bg']}!important}}.stChatInput{{position:fixed!important;bottom:0!important;left:50%!important;transform:translateX(-50%)!important;width:100%!important;max-width:48rem!important;padding:1rem!important;background:{T['bg']}!important;z-index:1001!important}}.stChatInput>div{{background-color:{T['chat_bg']}!important;border:1px solid {T['primary']}!important;border-radius:26px!important}}.favion-badge{{display:inline-block;font-size:0.75rem;padding:4px 10px;border-radius:12px;margin-bottom:8px;margin-right:6px;font-weight:600;background-color:{T['badge_bg']};color:{T['badge_text']}}}.model-badge{{background:#10B981;color:white}}[data-testid="stAudioInput"]{{margin-bottom:10px!important}}</style>""",unsafe_allow_html=True)
+genai.configure(api_key=GEMINI_KEY)
+gemini_model=genai.GenerativeModel('gemini-2.5-flash')
+groq_client=Groq(api_key=GROQ_KEY)
+def toast(msg,icon="🎯"):st.toast(msg,icon=icon)
+def transcribe_audio(audio_bytes):
+ try:
+  t=groq_client.audio.transcriptions.create(file=("audio.wav",audio_bytes),model="whisper-large-v3",language="id",response_format="text",temperature=0.0).strip()
+  if len(t)<3:return""
+  return t
+ except:return""
+def text_to_speech(text):
+ if not TTS:return[]
+ try:
+  text=re.sub(r'[#*`\-_]','',text);text=re.sub(r'\[([^\]]+)\]\([^\)]+\)',r'\1',text).strip()
+  chunks=[];t=text
+  while t:
+   if len(t)<=3000:chunks.append(t);break
+   p=t[:3000].rfind('. ')
+   if p==-1:p=3000
+   chunks.append(t[:p+1]);t=t[p+1:].strip()
+  audios=[]
+  for c in chunks:
+   tts=gTTS(text=c,lang='id',slow=False);fp=io.BytesIO();tts.write_to_fp(fp);fp.seek(0);audios.append(fp)
+  return audios
+ except:return[]
+def search_web(q):
+ try:
+  with DDGS() as ddgs:r=list(ddgs.text(f"{q} strategi cara tips",max_results=3));return"\n".join([f"- {i['body'][:200]}"for i in r])if r else""
+ except:return""
+def deteksi_intent(t):
+ t=t.lower()
+ if any(k in t for k in["bisnis","jualan","omzet","usaha","umkm","profit","marketing"]):return"bisnis"
+ if any(k in t for k in["konten","instagram","tiktok","youtube","fyp","ig"]):return"kanal"
+ if any(k in t for k in["belajar","utbk","ujian","skripsi","fokus"]):return"belajar"
+ if any(k in t for k in["uang","gaji","budget","nabung","investasi","duit"]):return"uang"
+ if any(k in t for k in["waktu","sibuk","produktif","jadwal","todo","deadline"]):return"waktu"
+ if any(k in t for k in["soal","hitung","rumus","integral","matematika"]):return"lempar_fanilla"
+ return"ngobrol"
+def jawab_favion(text,image,model_type):
+ is_sensitif,kata=cek_sensitif(text)
+ if is_sensitif:yield f"Maaf bro, aku gak bisa bantu soal '{kata}'. Itu konten sensitif.\n\nCoba topik lain yang positif ya!","ngobrol",model_type;return
+ intent=deteksi_intent(text)
+ if intent=="lempar_fanilla":yield"Soal sekolah/PR mending tanya Fanilla bro wkwk. Gw jagonya strategi & duit 💚","teman",model_type;return
+ if intent!="ngobrol":
+  ref=search_web(f"{intent} {text}")
+  if ref:text+=f"\n\n[Data Referensi]:\n{ref}"
+ tgl=datetime.now(pytz.timezone('Asia/Jakarta')).strftime("%d %B %Y")
+ p=f"""Kamu Favion,FAntastic inoVIsiON.Manager bisnis asik.Tanggal {tgl}.ATURAN:1.Bahasa gampang+gaul tipis."Oke bro,biar omzet naik gini caranya"2.Langsung solusi.Jangan muter.3.WAJIB TABEL markdown.Kolom:Strategi|Langkah Aksi|Deadline|Cara Ukur Hasil4.3-5 langkah langsung dilakuin.5.2-3 paragraf+1 tabel.15-25 baris.6.Tutup:"Gas eksekusi bro!"Problem:{text}"""
+ try:
+  if model_type=="gemini":
+   res=gemini_model.generate_content([p,image]if image else p,stream=True)
+   for c in res:
+    if c.text:yield c.text,intent,"gemini"
+  else:
+   chat=groq_client.chat.completions.create(messages=[{"role":"user","content":p}],model="llama-3.3-70b-versatile",stream=True)
+   for c in chat:
+    if c.choices[0].delta.content:yield c.choices[0].delta.content,intent,"groq"
+ except:yield"Error bro,coba lagi ya.","ngobrol",model_type
+with st.sidebar:
+ st.markdown("### ⚙️ Manage Favion")
+ m=st.selectbox("Pilih Model AI",["Gemini 2.5 Flash","Llama 3.3 70B Groq"],index=0 if st.session_state.selected_model=="gemini"else 1)
+ st.session_state.selected_model="gemini"if m=="Gemini 2.5 Flash"else"groq"
+ if st.button("🗑️ Hapus Semua Chat"):st.session_state.messages=[];st.session_state.chat_count=0;st.rerun()
+ st.metric("Chat Tersisa",f"{MAX_CHAT-st.session_state.chat_count}/{MAX_CHAT}")
+if len(st.session_state.messages)==0:
+ st.markdown('<div class="favion-title">Favion AI</div>',unsafe_allow_html=True)
+ st.markdown('<div class="favion-subtitle">FAntastic inoVIsiON<br>Fantastic Problem,A Fantastic Solution<br>Manager Bisnis,Kanal,Belajar,Uang,Waktu 🎯</div>',unsafe_allow_html=True)
+for i,msg in enumerate(st.session_state.messages):
+ with st.chat_message(msg["role"]):
+  if msg["role"]=="assistant":
+   badge={"bisnis":"💼 Bisnis","kanal":"📱 Kanal","belajar":"📚 Belajar","uang":"💰 Uang","waktu":"⏰ Waktu","ngobrol":"💬 Ngobrol"}.get(msg["intent"],"🎯 Favion")
+   model="Gemini"if msg.get("model")=="gemini"else"Groq"
+   st.markdown(f'<div class="favion-badge">{badge}</div><div class="favion-badge model-badge">{model}</div>',unsafe_allow_html=True)
+  if msg["type"]=="image":st.image(msg["content"],caption=msg.get("caption"))
+  else:
+   st.markdown(msg["content"])
+   if msg["role"]=="assistant"and msg["type"]=="text"and TTS:
+    if st.button("🔊 Dengarkan",key=f"tts_{i}"):
+     audios=text_to_speech(msg["content"])
+     if audios:
+      for a in audios:st.audio(a,format='audio/mp3')
+audio=st.audio_input("Rekam suara",key=f"audio_{st.session_state.chat_count}")
+if audio:
+ cid=id(audio)
+ if st.session_state.audio_processed_id!=cid:
+  st.session_state.audio_processed_id=cid
+  vt=transcribe_audio(audio.getvalue())
+  if vt:
+   if st.session_state.chat_count>=MAX_CHAT:st.error("Sesi habis");st.stop()
+   st.session_state.chat_count+=1
+   st.session_state.messages.append({"role":"user","type":"text","content":vt})
+   hasil=jawab_favion(vt,None,st.session_state.selected_model)
+   for tipe,konten,*rest in hasil:
+    intent=rest[0]if rest else"ngobrol";model=rest[1]if len(rest)>1 else st.session_state.selected_model
+    st.session_state.messages.append({"role":"assistant","type":tipe,"content":konten,"intent":intent,"model":model})
+   st.rerun()
+prompt=st.chat_input("Tanya Favion...",accept_file=True,file_type=["jpg","jpeg","png"])
 if prompt:
-    intent_aktif = "ngobrol"
-    if prompt.get("files"):
-        img = Image.open(prompt["files"][0])
-        txt = prompt.get("text", "Favion, tolong rapihin jadwal di foto ini.")
-        st.session_state.messages.append({"role": "user", "content": img, "type": "image", "caption": txt})
-        with st.chat_message("user"):
-            st.image(img, caption=txt)
-        with st.chat_message("assistant"):
-            ph = st.empty()
-            out = ""
-            for c, m in jawab_favion(txt, image=img):
-                out += c
-                intent_aktif = m
-                ph.markdown(out + "▌")
-            ph.markdown(out)
-            st.session_state.messages.append({"role": "assistant", "content": out, "type": "text", "intent": intent_aktif})
-    elif prompt.get("text"):
-        txt = prompt["text"]
-        st.session_state.messages.append({"role": "user", "content": txt, "type": "text"})
-        with st.chat_message("user"):
-            st.markdown(txt)
-        with st.chat_message("assistant"):
-            ph = st.empty()
-            out = ""
-            for c, m in jawab_favion(txt):
-                out += c
-                intent_aktif = m
-                ph.markdown(out + "▌")
-            ph.markdown(out)
-            st.session_state.messages.append({"role": "assistant", "content": out, "type": "text", "intent": intent_aktif})
-    st.rerun()
+ if st.session_state.chat_count>=MAX_CHAT:st.error("Sesi habis");st.stop()
+ st.session_state.chat_count+=1
+ user_text=prompt.text if hasattr(prompt,'text')else prompt
+ user_file=prompt.files[0]if hasattr(prompt,'files')and prompt.files else None
+ user_img=Image.open(user_file).convert("RGB")if user_file else None
+ if user_file:st.session_state.messages.append({"role":"user","type":"image","content":user_img})
+ if user_text:st.session_state.messages.append({"role":"user","type":"text","content":user_text})
+ hasil=jawab_favion(user_text,user_img,st.session_state.selected_model)
+ for tipe,konten,*rest in hasil:
+  intent=rest[0]if rest else"ngobrol";model=rest[1]if len(rest)>1 else st.session_state.selected_model
+  st.session_state.messages.append({"role":"assistant","type":tipe,"content":konten,"intent":intent,"model":model})
+ st.rerun()
