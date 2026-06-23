@@ -77,27 +77,27 @@ def jawab_favion(text,image,model_type):
   if ref:text+=f"\n\n[Data Referensi]:\n{ref}"
  tgl=datetime.now(pytz.timezone('Asia/Jakarta')).strftime("%d %B %Y")
  p=f"""Kamu Favion,FAntastic inoVIsiON.Manager bisnis asik.Tanggal {tgl}.ATURAN:1.Bahasa gampang+gaul tipis."Oke bro,biar omzet naik gini caranya"2.Langsung solusi.3.WAJIB TABEL markdown.Kolom:Strategi|Langkah Aksi|Deadline|Cara Ukur Hasil4.3-5 langkah langsung dilakuin.5.2-3 paragraf+1 tabel.15-25 baris.6.Tutup:"Gas eksekusi bro!"Problem:{text}"""
- full_text=""
- try:
-  if model_type=="gemini":
-   toast("Pake Gemini...","✨")
-   content=[p]
-   if image:content.append(image)
-   res=gemini_model.generate_content(content,stream=True)
-   for c in res:
-    if c.text:full_text+=c.text
-  else:
-   toast("Pake Groq...","⚡")
-   chat=groq_client.chat.completions.create(messages=[{"role":"user","content":p}],model="llama-3.3-70b-versatile",stream=True)
-   for c in chat:
-    if c.choices[0].delta.content:full_text+=c.choices[0].delta.content
-  if not full_text:return"Maaf bro, AI-nya lagi diem. Coba ganti model di sidebar.","ngobrol",model_type
-  return full_text,intent,model_type
- except Exception as e:
-  err=str(e)
-  if"429"in err:return"Limit Gemini abis bro. Ganti ke Groq di sidebar coba.","ngobrol","groq"
-  if"quota"in err.lower():return"Quota abis bro. Coba besok atau ganti model.","ngobrol",model_type
-  return f"Error: {err[:50]}. Coba ganti model atau cek API key.","ngobrol",model_type
+ models=[model_type,"groq"if model_type=="gemini"else"gemini"]
+ for try_model in models:
+  try:
+   if try_model=="gemini":
+    toast("Pake Gemini...","✨")
+    content=[p]
+    if image:content.append(image)
+    res=gemini_model.generate_content(content,stream=True)
+    full_text="".join([c.text for c in res if c.text])
+   else:
+    toast("Pake Groq...","⚡")
+    chat=groq_client.chat.completions.create(messages=[{"role":"user","content":p}],model="llama-3.3-70b-versatile",stream=True)
+    full_text="".join([c.choices[0].delta.content for c in chat if c.choices[0].delta.content])
+   if full_text:return full_text,intent,try_model
+  except Exception as e:
+   err=str(e)
+   if"401"in err:toast("API Key Gemini salah/expired","❌")
+   elif"429"in err:toast("Limit Gemini abis, coba Groq...","⚠️")
+   elif"quota"in err.lower():toast("Quota abis","⚠️")
+   if try_model==models[-1]:return f"Error: {err[:80]}. Cek API Key di Secrets atau coba lagi nanti.","ngobrol",try_model
+ return"Error gak dikenal bro.","ngobrol",model_type
 with st.sidebar:
  st.markdown("### ⚙️ Manage Favion")
  m=st.selectbox("Pilih Model AI",["Gemini 2.5 Flash","Llama 3.3 70B Groq"],index=0 if st.session_state.selected_model=="gemini"else 1)
