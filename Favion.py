@@ -15,15 +15,13 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
     #MainMenu, footer, header {visibility: hidden;}
-
-    /* Favion Theme: Teal/Green = Growth, Money, Action */
- .stApp,.main { background-color: #0A0F0D; }
- .block-container {
+.stApp,.main { background-color: #0A0F0D; }
+.block-container {
         padding-top: 2rem!important;
         padding-bottom: 8rem!important;
         max-width: 48rem!important;
     }
- .favion-title {
+.favion-title {
         text-align: center;
         font-size: 2.25rem;
         font-weight: 700;
@@ -33,13 +31,14 @@ st.markdown("""
         margin-bottom: 0.25rem;
         letter-spacing: -0.02em;
     }
- .favion-subtitle {
+.favion-subtitle {
         text-align: center;
         color: #6B7280;
         font-size: 0.95rem;
         margin-bottom: 3rem;
+        line-height: 1.5;
     }
- .stChatMessage {
+.stChatMessage {
         background-color: transparent!important;
         padding: 0.75rem 0!important;
         margin: 0!important;
@@ -53,11 +52,11 @@ st.markdown("""
         border: 1px solid #1F2937;
         font-size: 0.95rem;
     }
- .stChatMessage[data-testid*="user"] [data-testid="stChatMessageContent"] {
+.stChatMessage[data-testid*="user"] [data-testid="stChatMessageContent"] {
         background-color: #1F2937!important;
         border: 1px solid #374151;
     }
- .stChatInput {
+.stChatInput {
         position: fixed!important;
         bottom: 0!important;
         left: 0!important;
@@ -68,23 +67,20 @@ st.markdown("""
         margin: 0 auto!important;
         backdrop-filter: blur(8px);
     }
- .stChatInput > div {
+.stChatInput > div {
         background-color: #111827!important;
         border: 1px solid #10B981!important;
         border-radius: 26px!important;
         box-shadow: 0 4px 12px rgba(16,185,129,0.2);
     }
- .stChatInput input { color: #E5E7EB!important; font-size: 0.95rem!important; padding: 14px 18px!important; }
- .stChatInput input::placeholder { color: #6B7280!important; }
- .stImage img { border-radius: 14px!important; border: 1px solid #1F2937; margin: 8px 0; }
- .stToast { background-color: #111827!important; border: 1px solid #10B981!important; border-radius: 12px!important; }
-
-    /* Tabel Favion */
- .stDataFrame { border: 1px solid #1F2937!important; border-radius: 12px!important; }
- .stDataFrame thead tr th { background-color: #10B981!important; color: #0A0F0D!important; font-weight: 600!important; }
- .stDataFrame tbody tr td { background-color: #111827!important; color: #E5E7EB!important; }
-
- .favion-badge {
+.stChatInput input { color: #E5E7EB!important; font-size: 0.95rem!important; padding: 14px 18px!important; }
+.stChatInput input::placeholder { color: #6B7280!important; }
+.stImage img { border-radius: 14px!important; border: 1px solid #1F2937; margin: 8px 0; }
+.stToast { background-color: #111827!important; border: 1px solid #10B981!important; border-radius: 12px!important; }
+.stDataFrame { border: 1px solid #1F2937!important; border-radius: 12px!important; }
+.stDataFrame thead tr th { background-color: #10B981!important; color: #0A0F0D!important; font-weight: 600!important; }
+.stDataFrame tbody tr td { background-color: #111827!important; color: #E5E7EB!important; }
+.favion-badge {
         display: inline-block;
         font-size: 0.75rem;
         padding: 4px 10px;
@@ -114,7 +110,7 @@ if "chat" not in st.session_state:
 def search_web(query):
     try:
         with DDGS() as ddgs:
-            results = list(ddgs.text(f"{query} strategi tips", max_results=3))
+            results = list(ddgs.text(f"{query} strategi cara tips", max_results=3))
             if results:
                 return "\n".join([f"- {r['body'][:200]}" for r in results])
     except:
@@ -122,100 +118,91 @@ def search_web(query):
     return ""
 
 def deteksi_intent(text):
-    """Deteksi Favion harus ngapain: bisnis, kanal, belajar, uang, waktu"""
     t = text.lower()
-
-    if any(k in t for k in ["bisnis", "jualan", "omzet", "usaha", "umkm", "profit", "marketing"]):
-        return "bisnis"
-    if any(k in t for k in ["konten", "instagram", "tiktok", "youtube", "channel", "posting", "fyp"]):
-        return "kanal"
-    if any(k in t for k in ["belajar", "utbk", "ujian", "skripsi", "jadwal belajar", "fokus"]):
-        return "belajar"
-    if any(k in t for k in ["uang", "gaji", "budget", "nabung", "investasi", "keuangan", "utang"]):
-        return "uang"
-    if any(k in t for k in ["waktu", "sibuk", "produktif", "jadwal", "todo", "deadline", "prioritas"]):
-        return "waktu"
-    if any(k in t for k in ["soal", "hitung", "rumus", "integral", "matematika", "fisika"]):
-        return "lempar_fanilla"
+    if any(k in t for k in ["bisnis", "jualan", "omzet", "usaha", "umkm", "profit", "marketing", "jual"]): return "bisnis"
+    if any(k in t for k in ["konten", "instagram", "tiktok", "youtube", "channel", "posting", "fyp", "ig"]): return "kanal"
+    if any(k in t for k in ["belajar", "utbk", "ujian", "skripsi", "jadwal belajar", "fokus", "pelajaran"]): return "belajar"
+    if any(k in t for k in ["uang", "gaji", "budget", "nabung", "investasi", "keuangan", "utang", "duit"]): return "uang"
+    if any(k in t for k in ["waktu", "sibuk", "produktif", "jadwal", "todo", "deadline", "prioritas", "atur"]): return "waktu"
+    if any(k in t for k in ["soal", "hitung", "rumus", "integral", "matematika", "fisika", "kimia", "pr"]): return "lempar_fanilla"
     return "ngobrol"
 
 def jawab_favion(text, image=None):
-    """Favion = Manager segala hal. Bukan dosen."""
     intent = deteksi_intent(text)
 
-    # Kalau nanya soal, lempar ke Fanilla
     if intent == "lempar_fanilla":
-        yield "Waduh bro kalo soal sekolah/PR tanya Fanilla aja wkwk. Gw jagonya ngatur strategi & duit 💚\n\nCoba lu tanya gw: 'Favion, gimana cara atur waktu belajar' nah itu baru bidang gw.", "teman"
+        yield "Waduh bro kalo soal sekolah/PR mending tanya Fanilla aja wkwk. Gw jagonya ngatur strategi & duit 💚\n\nCoba tanya gw: 'Favion, gimana cara atur waktu belajar' nah itu baru bidang gw.", "teman"
         return
 
-    # Search strategi terbaru
     if intent!= "ngobrol":
-        with st.spinner("Favion lagi riset strategi..."):
+        with st.spinner("Favion lagi nyari strategi terbaik..."):
             ref = search_web(f"{intent} {text}")
             if ref:
-                text += f"\n\n[Data Pasar]:\n{ref}"
+                text += f"\n\n[Data Referensi]:\n{ref}"
 
     tz = pytz.timezone('Asia/Jakarta')
     tgl = datetime.now(tz).strftime("%d %B %Y")
 
+    # PROMPT FAVION: BAHASA GAMPANG + GAUL TIPIS + SOLUTIF
     prompt_map = {
-        "bisnis": f"""Kamu Favion, FAntastic inoVIsiON. Manager bisnis temen lu. Tanggal {tgl}.
+        "bisnis": f"""Kamu Favion, FAntastic inoVIsiON. Manager bisnis yg asik. Tanggal {tgl}.
+ATURAN BAHASA:
+1. Pake bahasa gampang dimengerti + gaul tipis. Kayak "Oke bro, biar omzet naik gini caranya" bukan "Anda harus melakukan optimasi".
+2. Langsung ke solusi. Jangan muter-muter.
+3. WAJIB pake TABEL markdown. Kolom: Strategi | Langkah Aksi | Deadline | Cara Ukur Hasil
+4. Kasih 3-5 langkah yg bisa langsung dilakuin.
+5. Panjang: 2-3 paragraf + 1 tabel. Total 15-25 baris.
+6. Tutup: "Gas eksekusi bro!" atau "Konsisten ya!"
+
+Problem user: {text}""",
+
+        "kanal": f"""Kamu Favion, FAntastic inoVIsiON. Ahli konten yg ngerti algoritma. Tanggal {tgl}.
+ATURAN BAHASA:
+1. Bahasa gampang + gaul. "Bro biar FYP kuncinya gini..."
+2. WAJIB TABEL. Kolom: Hari | Ide Konten | Hook 3 Detik | CTA | Jam Posting
+3. Kasih jadwal 7 hari.
+4. Panjang: 2 paragraf + 1 tabel. Total 15-20 baris.
+5. Tutup: "Upload rutin ya bro!"
+
+Problem user: {text}""",
+
+        "belajar": f"""Kamu Favion, FAntastic inoVIsiON. Coach belajar anti ribet. Tanggal {tgl}.
+ATURAN BAHASA:
+1. Bahasa simpel + gaul. "Bro kalo mau fokus belajar gini aja..."
+2. WAJIB TABEL. Kolom: Waktu | Ngapain | Tekniknya | Targetnya Apa
+3. Pake metode gampang: Pomodoro 25 menit, Catat Poin Penting.
+4. Panjang: 2 paragraf + 1 tabel. Total 15-20 baris.
+5. Tutup: "Disiplin ya bro, dikit-dikit lama-lama jadi!"
+
+Problem user: {text}""",
+
+        "uang": f"""Kamu Favion, FAntastic inoVIsiON. Temen yg jago atur duit. Tanggal {tgl}.
+ATURAN BAHASA:
+1. Bahasa gampang banget + gaul. "Bro duit lu gini nih biar aman..."
+2. WAJIB TABEL budget. Kolom: Buat Apa | Berapa % | Nominalnya | Catatan
+3. Pake aturan gampang: 50% Kebutuhan, 30% Keinginan, 20% Tabung.
+4. Panjang: 2 paragraf + 1 tabel. Total 15-20 baris.
+5. Tutup: "Jangan boros jajan bro!"
+
+Problem user: {text}""",
+
+        "waktu": f"""Kamu Favion, FAntastic inoVIsiON. Ahli manajemen waktu. Tanggal {tgl}.
+ATURAN BAHASA:
+1. Bahasa simpel + gaul. "Bro waktu lu bocor di sini nih..."
+2. WAJIB TABEL. Kolom: Tugas | Penting Gak? | Mendesak Gak? | Kerjain Kapan | Aksi
+3. Pake prioritas: Kerjain Sekarang, Jadwalin, Kasih ke Orang, Hapus.
+4. Panjang: 2 paragraf + 1 tabel. Total 15-20 baris.
+5. Tutup: "Fokus yg penting dulu bro!"
+
+Problem user: {text}""",
+
+        "ngobrol": f"""Kamu Favion, FAntastic inoVIsiON. Temen nongkrong yg pinter.
 ATURAN:
-1. Bahasa: Gaul tapi solutif. "Oke bro, buat naikin omzet lu gini..."
-2. OUTPUT: Wajib pake TABEL markdown. Kolom: Strategi | Aksi | Deadline | Metrik
-3. Kasih 3-5 langkah konkret. Jangan teori doang.
-4. Panjang: 2-4 paragraf + 1 tabel. Total 15-30 baris.
-5. Tutup: "Gas eksekusi bro!" atau "Konsisten kuncinya!"
-
-Misi user: {text}""",
-
-        "kanal": f"""Kamu Favion, FAntastic inoVIsiON. Content strategist temen lu. Tanggal {tgl}.
-ATURAN:
-1. Bahasa: Gaul, paham algoritma. "Bro biar FYP gini..."
-2. OUTPUT: Wajib TABEL. Kolom: Hari | Ide Konten | Hook | CTA | Jam Post
-3. Kasih 7 hari content calendar.
-4. Panjang: 2-3 paragraf + 1 tabel. Total 15-25 baris.
-5. Tutup: "Konsisten upload ya!"
-
-Misi user: {text}""",
-
-        "belajar": f"""Kamu Favion, FAntastic inoVIsiON. Coach belajar temen lu. Tanggal {tgl}.
-ATURAN:
-1. Bahasa: Gaul tapi disiplin. "Bro kalo mau lolos UTBK gini..."
-2. OUTPUT: TABEL. Kolom: Waktu | Kegiatan | Teknik | Target
-3. Pake metode: Pomodoro, Feynman, Active Recall.
-4. Panjang: 2-3 paragraf + 1 tabel. Total 15-25 baris.
-5. Tutup: "Disiplin ya bro!"
-
-Misi user: {text}""",
-
-        "uang": f"""Kamu Favion, FAntastic inoVIsiON. Financial advisor temen lu. Tanggal {tgl}.
-ATURAN:
-1. Bahasa: Gaul tapi bijak. "Bro duit lu gini nih..."
-2. OUTPUT: TABEL budget. Kolom: Pos | Alokasi % | Nominal | Catatan
-3. Pake aturan 50/30/20 atau 40/30/20/10.
-4. Panjang: 2-3 paragraf + 1 tabel. Total 15-25 baris.
-5. Tutup: "Jangan jajan boba mulu bro!"
-
-Misi user: {text}""",
-
-        "waktu": f"""Kamu Favion, FAntastic inoVIsiON. Time management coach temen lu. Tanggal {tgl}.
-ATURAN:
-1. Bahasa: Gaul tapi tegas. "Bro waktu lu bocor di sini..."
-2. OUTPUT: TABEL Eisenhower. Kolom: Tugas | Urgent | Penting | Aksi | Deadline
-3. Prioritas: Do, Schedule, Delegate, Delete.
-4. Panjang: 2-3 paragraf + 1 tabel. Total 15-25 baris.
-5. Tutup: "Fokus yg penting bro!"
-
-Misi user: {text}""",
-
-        "ngobrol": f"""Kamu Favion, FAntastic inoVIsiON. Temen nongkrong yg pinter ngatur hidup.
-ATURAN:
-1. Bahasa: Gaul abis, empati, informatif. "Anjir sama bro" "Wkwk gila lu"
-2. PANJANG: 1-2 paragraf MAX. Jangan panjang.
-3. Topik: Bebas. Curhat, becanda, motivasi.
-4. Kalo bisa, selipin 1 tips manajemen hidup kecil.
-5. Jangan sebut "AI/model".
+1. Bahasa gaul, empati, simpel. "Wkwk sama bro" "Anjir semangat lu"
+2. PANJANG: 1-2 paragraf MAX. Pendek aja.
+3. Kalo bisa selipin 1 tips hidup kecil yg gampang.
+4. Jangan sok manager. Jadi temen aja.
+5. Jangan sebut "AI".
 
 Chat: {text}"""
     }
@@ -223,10 +210,10 @@ Chat: {text}"""
     prompt = prompt_map[intent]
 
     if image:
-        prompt += "\n\nUser upload gambar. Scan gambar itu. Kalo isinya jadwal/catatan/todo, ubah jadi tabel rapi + kasih saran optimasi. Kalo foto random, komen kayak temen."
-        st.toast("Favion lagi scan gambar...", icon="🔍")
+        prompt += "\n\nUser upload gambar. Kalo isinya jadwal/catatan/todo/tulisan, scan dan ubah jadi tabel rapi + kasih saran biar lebih efisien. Kalo foto random, komen kayak temen. Pake bahasa gampang."
+        st.toast("Favion scan gambar lu...", icon="🔍")
     else:
-        st.toast("Favion nyusun strategi...", icon="🎯")
+        st.toast("Favion nyusun solusi...", icon="🎯")
 
     try:
         if image:
@@ -239,14 +226,14 @@ Chat: {text}"""
                 yield chunk.text, intent
     except Exception as e:
         if "429" in str(e):
-            yield "Limit harian abis bro. Besok jam 7 pagi reset. Istirahat dulu kita 😴", "ngobrol"
+            yield "Limit harian abis bro. Besok jam 7 pagi reset. Rehat dulu kita 😴", "ngobrol"
         else:
             yield "Error bro, coba lagi ya.", "ngobrol"
 
 # ==================== UI ====================
 if len(st.session_state.messages) == 0:
     st.markdown('<div class="favion-title">Favion AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="favion-subtitle">FAntastic inoVIsiON<br>Manager Bisnis, Kanal, Belajar, Uang, Waktu. Upload foto jadwal lu 📸</div>', unsafe_allow_html=True)
+    st.markdown('<div class="favion-subtitle">FAntastic inoVIsiON<br>Fantastic Problem, A Fantastic Solution<br>Manager Bisnis, Kanal, Belajar, Uang, Waktu 📸</div>', unsafe_allow_html=True)
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
@@ -254,7 +241,7 @@ for msg in st.session_state.messages:
             badge_map = {
                 "bisnis": "💼 Bisnis", "kanal": "📱 Kanal", "belajar": "📚 Belajar",
                 "uang": "💰 Uang", "waktu": "⏰ Waktu", "ngobrol": "💬 Ngobrol",
-                "lempar_fanilla": "🎓 Lempar Fanilla"
+                "lempar_fanilla": "🎓 Tanya Fanilla"
             }
             label = badge_map.get(msg["intent"], "🎯 Favion")
             st.markdown(f'<div class="favion-badge">{label}</div>', unsafe_allow_html=True)
@@ -270,7 +257,7 @@ if prompt:
     intent_aktif = "ngobrol"
     if prompt.get("files"):
         img = Image.open(prompt["files"][0])
-        txt = prompt.get("text", "Favion, tolong rapihin jadwal di foto ini jadi tabel.")
+        txt = prompt.get("text", "Favion, tolong rapihin jadwal di foto ini.")
         st.session_state.messages.append({"role": "user", "content": img, "type": "image", "caption": txt})
         with st.chat_message("user"):
             st.image(img, caption=txt)
