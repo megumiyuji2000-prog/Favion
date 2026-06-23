@@ -55,7 +55,7 @@ def text_to_speech(text):
  except:return[]
 def search_web(q):
  try:
-  with DDGS() as ddgs:r=list(ddgs.text(f"{q} strategi cara tips",max_results=3));return"\n".join([f"- {i['body'][:200]}"for i in r])if r else""
+  with DDGS()as ddgs:r=list(ddgs.text(f"{q} strategi cara tips",max_results=3));return"\n".join([f"- {i['body'][:200]}"for i in r])if r else""
  except:return""
 def deteksi_intent(t):
  t=t.lower()
@@ -68,24 +68,26 @@ def deteksi_intent(t):
  return"ngobrol"
 def jawab_favion(text,image,model_type):
  is_sensitif,kata=cek_sensitif(text)
- if is_sensitif:yield f"Maaf bro, aku gak bisa bantu soal '{kata}'. Itu konten sensitif.\n\nCoba topik lain yang positif ya!","ngobrol",model_type;return
+ if is_sensitif:return f"Maaf bro, aku gak bisa bantu soal '{kata}'. Itu konten sensitif.\n\nCoba topik lain yang positif ya!","ngobrol",model_type
  intent=deteksi_intent(text)
- if intent=="lempar_fanilla":yield"Soal sekolah/PR mending tanya Fanilla bro wkwk. Gw jagonya strategi & duit 💚","teman",model_type;return
+ if intent=="lempar_fanilla":return"Soal sekolah/PR mending tanya Fanilla bro wkwk. Gw jagonya strategi & duit 💚","teman",model_type
  if intent!="ngobrol":
   ref=search_web(f"{intent} {text}")
   if ref:text+=f"\n\n[Data Referensi]:\n{ref}"
  tgl=datetime.now(pytz.timezone('Asia/Jakarta')).strftime("%d %B %Y")
- p=f"""Kamu Favion,FAntastic inoVIsiON.Manager bisnis asik.Tanggal {tgl}.ATURAN:1.Bahasa gampang+gaul tipis."Oke bro,biar omzet naik gini caranya"2.Langsung solusi.Jangan muter.3.WAJIB TABEL markdown.Kolom:Strategi|Langkah Aksi|Deadline|Cara Ukur Hasil4.3-5 langkah langsung dilakuin.5.2-3 paragraf+1 tabel.15-25 baris.6.Tutup:"Gas eksekusi bro!"Problem:{text}"""
+ p=f"""Kamu Favion,FAntastic inoVIsiON.Manager bisnis asik.Tanggal {tgl}.ATURAN:1.Bahasa gampang+gaul tipis."Oke bro,biar omzet naik gini caranya"2.Langsung solusi.3.WAJIB TABEL markdown.Kolom:Strategi|Langkah Aksi|Deadline|Cara Ukur Hasil4.3-5 langkah langsung dilakuin.5.2-3 paragraf+1 tabel.15-25 baris.6.Tutup:"Gas eksekusi bro!"Problem:{text}"""
+ full_text=""
  try:
   if model_type=="gemini":
    res=gemini_model.generate_content([p,image]if image else p,stream=True)
    for c in res:
-    if c.text:yield c.text,intent,"gemini"
+    if c.text:full_text+=c.text
   else:
    chat=groq_client.chat.completions.create(messages=[{"role":"user","content":p}],model="llama-3.3-70b-versatile",stream=True)
    for c in chat:
-    if c.choices[0].delta.content:yield c.choices[0].delta.content,intent,"groq"
- except:yield"Error bro,coba lagi ya.","ngobrol",model_type
+    if c.choices[0].delta.content:full_text+=c.choices[0].delta.content
+  return full_text,intent,model_type
+ except:return"Error bro,coba lagi ya.","ngobrol",model_type
 with st.sidebar:
  st.markdown("### ⚙️ Manage Favion")
  m=st.selectbox("Pilih Model AI",["Gemini 2.5 Flash","Llama 3.3 70B Groq"],index=0 if st.session_state.selected_model=="gemini"else 1)
@@ -119,10 +121,12 @@ if audio:
    if st.session_state.chat_count>=MAX_CHAT:st.error("Sesi habis");st.stop()
    st.session_state.chat_count+=1
    st.session_state.messages.append({"role":"user","type":"text","content":vt})
-   hasil=jawab_favion(vt,None,st.session_state.selected_model)
-   for tipe,konten,*rest in hasil:
-    intent=rest[0]if rest else"ngobrol";model=rest[1]if len(rest)>1 else st.session_state.selected_model
-    st.session_state.messages.append({"role":"assistant","type":tipe,"content":konten,"intent":intent,"model":model})
+   with st.chat_message("assistant"):
+    ph=st.empty()
+    with st.spinner("Favion mikir..."):
+     konten,intent,model=jawab_favion(vt,None,st.session_state.selected_model)
+     ph.empty()
+   st.session_state.messages.append({"role":"assistant","type":"text","content":konten,"intent":intent,"model":model})
    st.rerun()
 prompt=st.chat_input("Tanya Favion...",accept_file=True,file_type=["jpg","jpeg","png"])
 if prompt:
@@ -133,8 +137,10 @@ if prompt:
  user_img=Image.open(user_file).convert("RGB")if user_file else None
  if user_file:st.session_state.messages.append({"role":"user","type":"image","content":user_img})
  if user_text:st.session_state.messages.append({"role":"user","type":"text","content":user_text})
- hasil=jawab_favion(user_text,user_img,st.session_state.selected_model)
- for tipe,konten,*rest in hasil:
-  intent=rest[0]if rest else"ngobrol";model=rest[1]if len(rest)>1 else st.session_state.selected_model
-  st.session_state.messages.append({"role":"assistant","type":tipe,"content":konten,"intent":intent,"model":model})
+ with st.chat_message("assistant"):
+  ph=st.empty()
+  with st.spinner("Favion mikir..."):
+   konten,intent,model=jawab_favion(user_text,user_img,st.session_state.selected_model)
+   ph.empty()
+ st.session_state.messages.append({"role":"assistant","type":"text","content":konten,"intent":intent,"model":model})
  st.rerun()
