@@ -59,12 +59,12 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif}}
 .orion-badge{{display:inline-block;font-size:.7rem;padding:4px 10px;border-radius:12px;margin-bottom:10px;margin-right:6px;font-weight:600;background-color:{T['badge_bg']};color:{T['badge_text']};border:1px solid {T['border']}}}
 .model-badge{{background:#A78BFA;color:white}}
 .footer-fnl{{position:fixed;bottom:5px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:{T['badge_text']};z-index:1000}}
-.typing-indicator{{display:flex;align-items:center;gap:8px;padding:12px 0}}
-.typing-indicator span{{width:10px;height:10px;background-color:#000;border-radius:50%;display:inline-block;animation:bounce 1.4s infinite ease-in-out both}}
-.typing-indicator span:nth-child(1){{animation-delay:-0.32s}}
-.typing-indicator span:nth-child(2){{animation-delay:-0.16s}}
-.typing-indicator span:nth-child(3){{animation-delay:0s}}
-@keyframes bounce{{0%,80%,100%{{transform:translateY(0)}} 40%{{transform:translateY(-12px)}}}}
+.typing-indicator{{display:flex;align-items:center;gap:12px;padding:12px 4px;height:40px}}
+.typing-indicator span{{width:12px;height:12px;background-color:#000;border-radius:50%;display:inline-block;animation:wave 1.8s infinite ease-in-out}}
+.typing-indicator span:nth-child(1){{animation-delay:0s}}
+.typing-indicator span:nth-child(2){{animation-delay:0.2s}}
+.typing-indicator span:nth-child(3){{animation-delay:0.4s}}
+@keyframes wave{{0%,60%,100%{{transform:translateY(0)}} 30%{{transform:translateY(-16px)}}}}
 </style>""", unsafe_allow_html=True)
 
 try:
@@ -158,7 +158,7 @@ def kirim_ke_ai(prompt, image=None):
     full_p = sys_p + f"\n\nJenis: {tingkat}\nPertanyaan user: {prompt}"
     loading_placeholder = st.empty()
     with loading_placeholder.container():
-        with st.chat_message("assistant"): st.markdown('<div class="typing-indicator"><span></span><span></span></div>', unsafe_allow_html=True)
+        with st.chat_message("assistant"): st.markdown('<div class="typing-indicator"><span></span><span></span><span></span></div>', unsafe_allow_html=True)
     models = [ss.selected_model, "groq" if ss.selected_model == "gemini" else "gemini"]; result = None
     for try_model in models:
         try:
