@@ -172,7 +172,7 @@ def generate_gambar(p):
     url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(p[:200])}?width=1024&height=1024&nologo=true&seed={int(time.time()) % 10000}"
     try:
         r = requests.get(url, timeout=45)
-        return (Image.open(io.BytesIO(r.content)).convert("RGB"), None) if r.status_code == 200 else (None, "Server penuh"))
+        return (Image.open(io.BytesIO(r.content)).convert("RGB"), None) if r.status_code == 200 else (None, "Server penuh")
     except:
         return None, "Error"
 
@@ -219,7 +219,7 @@ def kirim_ke_ai(prompt, image=None):
     loading_placeholder = st.empty()
     with loading_placeholder.container():
         with st.chat_message("assistant"):
-            st.markdown('<div class="typing-indicator"><span></span><span></span><span></span></div>', unsafe_allow_html=True)
+            st.markdown('<div class="typing-indicator"><span></span><span></span></div>', unsafe_allow_html=True)
     
     models = [st.session_state.selected_model, "groq" if st.session_state.selected_model == "gemini" else "gemini"]
     result = None
@@ -322,3 +322,4 @@ if prompt:
     user_text = prompt.text if hasattr(prompt, 'text') else (prompt.get("text", "") if isinstance(prompt, dict) else prompt)
     user_file = prompt.files[0] if hasattr(prompt, 'files') and prompt.files else (prompt.get("files", [None])[0] if isinstance(prompt, dict) and prompt.get("files") else None)
     user_img = None
+    if user_f
