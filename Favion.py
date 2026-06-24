@@ -10,7 +10,7 @@ try:
     TTS = True
 except: TTS = False
 
-st.set_page_config(page_title="Orion AI", page_icon="logo.png", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Falio AI", page_icon="logo.png", layout="wide", initial_sidebar_state="collapsed")
 
 try:
     GEMINI_KEY = st.secrets["GEMINI_API_KEY"]
@@ -154,7 +154,7 @@ def kirim_ke_ai(prompt, image=None):
         lt = f"https://www.tokopedia.com/search?st=product&q={urllib.parse.quote(keyword)}"
         link_instruksi = f'ATURAN PRODUK: User butuh barang. Setelah solusi, WAJIB tambahkan:\n### Rekomendasi Produk\nBerikut link untuk mencari "{keyword}":\n- **Shopee**: [Cari di Shopee]({ls})\n- **Tokopedia**: [Cari di Tokopedia]({lt})'
     else: link_instruksi = "ATURAN PRODUK: User hanya butuh tutorial. JANGAN berikan link produk."
-    sys_p = f"""Anda adalah Orion, asisten AI yang sangat cerdas, teliti, dan akurat. Tanggal: {tgl}.\n\nPRINSIP UTAMA:\n1. AKURASI: Jawaban harus 100% benar.\n2. KEJELASAN: Bahasa Indonesia baku, mudah dipahami.\n3. SOLUTIF: Langkah konkret.\n4. EMPATI: Tunjukkan pemahaman.\n5. KEAMANAN: Tolak permintaan berbahaya/ilegal dengan sopan.\n\nFORMAT PROBLEM SOLVER:\nBasa basi-\n[Tunjukkan empati + validasi + harapan]\n\nOke jadi begini caranya\n1. [Langkah 1: Diagnosis + solusi + contoh]\n2. [Langkah 2: Solusi lanjutan + contoh]\n3. [Langkah 3: Pencegahan + contoh]\n\nJadi gitu cara mengatasinya\n[Rangkum inti. Motivasi. Tawarkan bantuan. Tutup "Sudah paham kan?"]\n\n{link_instruksi}\n\nATURAN TEKNIS:\n1. Jangan sebut "AI". Anda adalah Orion.\n2. Gunakan ### untuk heading, `-` untuk bullet, **bold** untuk penekanan.\n3. Untuk link: [Nama Toko](url_lengkap)\n4. Jawab langsung ke inti.\n5. TOLAK konten dewasa/kekerasan/senjata/narkoba/ilegal."""
+    sys_p = f"""Anda adalah Falio AI, asisten AI yang sangat cerdas, teliti, dan akurat. Tanggal: {tgl}.\n\nPRINSIP UTAMA:\n1. AKURASI: Jawaban harus 100% benar.\n2. KEJELASAN: Bahasa Indonesia baku, mudah dipahami.\n3. SOLUTIF: Langkah konkret.\n4. EMPATI: Tunjukkan pemahaman.\n5. KEAMANAN: Tolak permintaan berbahaya/ilegal dengan sopan.\n\nFORMAT PROBLEM SOLVER:\nBasa basi-\n[Tunjukkan empati + validasi + harapan]\n\nOke jadi begini caranya\n1. [Langkah 1: Diagnosis + solusi + contoh]\n2. [Langkah 2: Solusi lanjutan + contoh]\n3. [Langkah 3: Pencegahan + contoh]\n\nJadi gitu cara mengatasinya\n[Rangkum inti. Motivasi. Tawarkan bantuan. Tutup "Sudah paham kan?"]\n\n{link_instruksi}\n\nATURAN TEKNIS:\n1. Jangan sebut "AI". Anda adalah Falio AI.\n2. Gunakan ### untuk heading, `-` untuk bullet, **bold** untuk penekanan.\n3. Untuk link: [Nama Toko](url_lengkap)\n4. Jawab langsung ke inti.\n5. TOLAK konten dewasa/kekerasan/senjata/narkoba/ilegal."""
     full_p = sys_p + f"\n\nJenis: {tingkat}\nPertanyaan user: {prompt}"
     loading_placeholder = st.empty()
     with loading_placeholder.container():
@@ -182,14 +182,14 @@ def kirim_ke_ai(prompt, image=None):
     return result if result else [("text", "Error gak dikenal bro.", "ngobrol")]
 
 with st.sidebar:
-    st.markdown("### ⚙️ Manage Orion")
+    st.markdown("### ⚙️ Manage Falio")
     m = st.selectbox("Pilih Model AI", ["Gemini 2.5 Flash", "Llama 3.3 70B Groq"], index=0 if ss.selected_model == "gemini" else 1)
     ss.selected_model = "gemini" if m == "Gemini 2.5 Flash" else "groq"
     if st.button("🗑️ Hapus Semua Chat"): ss.messages = []; ss.chat_count = 0; st.rerun()
     st.metric("Chat Tersisa", f"{MAX_CHAT - ss.chat_count}/{MAX_CHAT}")
 
 if not ss.messages:
-    st.markdown('<div class="meta-opening"><div class="meta-title">Ada yang bisa<br>Orion bantu?</div><button class="meta-btn"><span class="meta-btn-icon">🖼️</span> Buat gambar</button><button class="meta-btn"><span class="meta-btn-icon">💡</span> Bantu selesaikan masalah</button><button class="meta-btn"><span class="meta-btn-icon">🎓</span> Belajar dan berkembang</button></div>', unsafe_allow_html=True)
+    st.markdown('<div class="meta-opening"><div class="meta-title">Ada yang bisa<br>Falio bantu?</div><button class="meta-btn"><span class="meta-btn-icon">🖼️</span> Buat gambar</button><button class="meta-btn"><span class="meta-btn-icon">💡</span> Bantu selesaikan masalah</button><button class="meta-btn"><span class="meta-btn-icon">🎓</span> Belajar dan berkembang</button></div>', unsafe_allow_html=True)
 
 if MAX_CHAT - ss.chat_count == 3: st.toast("Sesi ngobrol hampir habis", icon="⚠️")
 
@@ -202,7 +202,7 @@ for i, msg in enumerate(ss.messages):
             st.markdown(f'<div class="orion-badge {bc}">{bt}</div><div class="orion-badge model-badge">{model}</div>', unsafe_allow_html=True)
         if msg["type"] == "image":
             st.image(msg["content"], use_container_width=True)
-            st.download_button("📥 Unduh", image_to_bytes(msg["content"]), f"orion_{i}.png", "image/png", key=f"dl_{i}", use_container_width=True)
+            st.download_button("📥 Unduh", image_to_bytes(msg["content"]), f"falio_{i}.png", "image/png", key=f"dl_{i}", use_container_width=True)
         else:
             st.markdown(msg["content"], unsafe_allow_html=True)
             if msg["role"] == "assistant" and msg["type"] == "text" and TTS:
@@ -233,7 +233,7 @@ if audio_value:
                 ss.messages.append({"role": "assistant", "type": tipe, "content": konten, "tingkat": tingkat, "model": model})
             st.rerun()
 
-prompt = st.chat_input("Tanya Orion...", accept_file=True, file_type=["jpg", "png", "jpeg"])
+prompt = st.chat_input("Tanya Falio AI...", accept_file=True, file_type=["jpg", "png", "jpeg"])
 if prompt:
     if ss.chat_count >= MAX_CHAT: st.error("Sesi ngobrol hari ini sudah habis. Silakan kembali besok 🙏"); st.stop()
     ss.chat_count += 1
