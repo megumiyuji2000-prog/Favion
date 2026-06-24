@@ -82,12 +82,12 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif}}
 .stFileUploader{{position:relative}}
 .stFileUploader>div>button{{border-radius:50%!important;width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;background:{T['chat_bg']}!important;border:1px solid {T['border']}!important}}
 
-.typing-indicator{{display:flex;align-items:center;gap:6px;padding:8px 0}}
-.typing-indicator span{{width:8px;height:8px;background-color:{T['primary']};border-radius:50%;display:inline-block;animation:bounce 1.4s infinite ease-in-out both}}
+.typing-indicator{{display:flex;align-items:center;gap:8px;padding:12px 0}}
+.typing-indicator span{{width:10px;height:10px;background-color:#000;border-radius:50%;display:inline-block;animation:bounce 1.4s infinite ease-in-out both}}
 .typing-indicator span:nth-child(1){{animation-delay:-0.32s}}
 .typing-indicator span:nth-child(2){{animation-delay:-0.16s}}
 .typing-indicator span:nth-child(3){{animation-delay:0s}}
-@keyframes bounce{{0%,80%,100%{{transform:translateY(0)}} 40%{{transform:translateY(-10px)}}}}
+@keyframes bounce{{0%,80%,100%{{transform:translateY(0)}} 40%{{transform:translateY(-12px)}}}}
 </style>""", unsafe_allow_html=True)
 
 try:
@@ -220,7 +220,7 @@ def kirim_ke_ai(prompt, image=None):
     loading_placeholder = st.empty()
     with loading_placeholder.container():
         with st.chat_message("assistant"):
-            st.markdown('<div class="typing-indicator"><span></span><span></span><span></span></div>', unsafe_allow_html=True)
+            st.markdown('<div class="typing-indicator"><span></span><span></span></div>', unsafe_allow_html=True)
     
     models = [st.session_state.selected_model, "groq" if st.session_state.selected_model == "gemini" else "gemini"]
     result = None
@@ -322,4 +322,5 @@ if prompt:
     st.session_state.chat_count += 1
     user_text = prompt.text if hasattr(prompt, 'text') else (prompt.get("text", "") if isinstance(prompt, dict) else prompt)
     user_file = prompt.files[0] if hasattr(prompt, 'files') and prompt.files else (prompt.get("files", [None])[0] if isinstance(prompt, dict) and prompt.get("files") else None)
-    user_img
+    user_img = None
+    if user_
