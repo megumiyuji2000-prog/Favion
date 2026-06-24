@@ -249,4 +249,4 @@ if prompt:
         ss.messages.append({"role": "assistant", "type": tipe, "content": konten, "tingkat": tingkat, "model": model})
     st.rerun()
 
-st.markdown('<div class="footer-fnl">product of F.N.L</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer-fnl"> falio™ is product of F.N.L</div>', unsafe_allow_html=True)
