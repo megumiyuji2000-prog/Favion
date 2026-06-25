@@ -5,11 +5,6 @@ from PIL import Image
 from datetime import datetime, timedelta
 import pytz, time, requests, io, urllib.parse, base64, re
 
-try:
-    from gtts import gTTS
-    TTS = True
-except: TTS = False
-
 st.set_page_config(page_title="Falio AI", page_icon="logo.png", layout="wide", initial_sidebar_state="collapsed")
 
 try:
@@ -101,21 +96,6 @@ def transcribe_audio(audio_bytes):
         if len(t) < 3 or t.lower() in ["dan abroh", "terima kasih", "you", ""]: toast("Suara gak kedeteksi jelas", "⚠️"); return ""
         return t
     except Exception as e: toast(f"STT Error: {str(e)[:30]}", "❌"); return ""
-
-def text_to_speech(text):
-    if not TTS: return []
-    try:
-        text = re.sub(r'[#*`\-_]', '', text); text = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', text).strip()
-        chunks = []; t = text
-        while t:
-            if len(t) <= 3000: chunks.append(t); break
-            p = t[:3000].rfind('. '); p = 3000 if p == -1 else p
-            chunks.append(t[:p + 1]); t = t[p + 1:].strip()
-        audios = []
-        for c in chunks:
-            tts = gTTS(text=c, lang='id', slow=False); fp = io.BytesIO(); tts.write_to_fp(fp); fp.seek(0); audios.append(fp)
-        return audios
-    except: return []
 
 def butuh_link_produk(text):
     t = text.lower()
@@ -248,7 +228,7 @@ JANGAN KASIH LINK PRODUK KECUALI USER MINTA."""
     full_p = sys_p + f"\n\nJenis: {tingkat}\nPertanyaan user: {prompt}"
     loading_placeholder = st.empty()
     with loading_placeholder.container():
-        with st.chat_message("assistant"): st.markdown('<div class="typing-indicator"><span></span><span></span></div>', unsafe_allow_html=True)
+        with st.chat_message("assistant"): st.markdown('<div class="typing-indicator"><span></span><span></div>', unsafe_allow_html=True)
     models = [ss.selected_model, "groq" if ss.selected_model == "gemini" else "gemini"]; result = None
     for try_model in models:
         try:
@@ -310,6 +290,20 @@ for i, msg in enumerate(msgs):
             st.download_button("📥 Unduh", image_to_bytes(msg["content"]), f"falio_{i}.png", "image/png", key=f"dl_{i}", use_container_width=True)
         else:
             st.markdown(msg["content"], unsafe_allow_html=True)
-            if msg["role"] == "assistant" and msg["type"] == "text" and TTS and ss.mode!= "aib":
-                if st.button("🔊", key=f"tts_{i}", help="Dengarkan"):
-              
+
+if len(msgs) > 3:
+    col1, col2 = st.columns([10, 1])
+    with col2:
+        if st.button("↓", key="scroll-btn", help="Scroll ke bawah"): st.markdown("<script>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});</script>", unsafe_allow_html=True)
+
+audio_value = st.audio_input("Rekam suara", key=f"audio_recorder_{ss.chat_count}", label_visibility="collapsed")
+if audio_value:
+    current_audio_id = id(audio_value)
+    if ss.audio_processed_id!= current_audio_id:
+        ss.audio_processed_id = current_audio_id
+        voice_text = transcribe_audio(audio_value.getvalue())
+        if voice_text:
+            if ss.chat_count >= MAX_CHAT: st.error("Sesi ngobrol hari ini sudah habis"); st.stop()
+            ss.chat_count += 1
+            user_msg = {"role": "user", "type": "text", "content": voice_text, "mode": ss.mode}
+            if ss.mode 
