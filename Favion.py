@@ -26,7 +26,7 @@ if "selected_model" not in ss: ss.selected_model = "gemini"
 
 MAX_CHAT = 70
 IS_DARK = not (6 <= datetime.now(pytz.timezone('Asia/Jakarta')).hour < 18)
-T = {"bg": "#0A0A0B" if IS_DARK else "#FFFFFF", "chat_bg": "#18181B" if IS_DARK else "#F4F4F5", "user_bg": "#27272A" if IS_DARK else "#E4E4E7", "text": "#E4E4E7" if IS_DARK else "#18181B", "border": "#27272A" if IS_DARK else "#E4E4E7", "badge_bg": "#18181B" if IS_DARK else "#F4F4F5", "badge_text": "#A1A1AA" if IS_DARK else "#71717A", "primary": "#A78BFA", "icon": "#FFFFFF" if IS_DARK else "#000000"}
+T = {"bg": "#0A0A0B" if IS_DARK else "#FFFFFF", "chat_bg": "#18181B" if IS_DARK else "#F4F4F5", "user_bg": "#27272A" if IS_DARK else "#E4E4E7", "text": "#E4E4E7" if IS_DARK else "#18181B", "border": "#27272A" if IS_DARK else "#E4E4E7", "badge_bg": "#18181B" if IS_DARK else "#F4F4F5", "badge_text": "#A1A1AA" if IS_DARK else "#71717A", "primary": "#A78BFA"}
 BLACKLIST = ["bom","senjata","bunuh","bunuh diri","teroris","narkoba","bokep","hentai","porn","seks","sex","bugil","telanjang","memek","jembut","kontol","ngentot","coli","masturbasi","ganja","sabu","ekstasi","heroin","kokain"]
 
 def cek_sensitif(t):
@@ -57,9 +57,12 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif;transition:background-c
 .stChatInput{{position:fixed!important;bottom:45px!important;left:50%!important;transform:translateX(-50%)!important;width:calc(100% - 20px)!important;max-width:48rem!important;padding:0 1rem!important;background:{T['bg']}!important;z-index:1001!important;height:52px!important;transition:all 0.5s ease}}
 .stChatInput>div{{background-color:{T['bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:28px!important;padding:4px 8px!important;height:52px!important;transition:all 0.5s ease}}
 .stChatInput textarea{{font-size:1rem!important;min-height:42px!important;color:{T['text']}!important;transition:color 0.5s ease}}
-/* Tombol + Upload - animasi warna */
-.stChatInput button[kind="secondary"] svg{{fill:{T['icon']}!important;transition:fill 0.5s ease}}
-.stChatInput button[kind="secondary"]:hover svg{{fill:{T['primary']}!important}}
+
+/* Tombol + Upload: MERAH, dipencet jadi PUTIH */
+.stChatInput button[kind="secondary"] svg{{fill:#EF4444!important;transition:fill 0.2s ease}}
+.stChatInput button[kind="secondary"]:active svg{{fill:#FFFFFF!important}}
+.stChatInput button[kind="secondary"]:hover svg{{fill:#DC2626!important}}
+
 /* Tombol send */
 .stChatInput button[kind="primary"] svg{{fill:{T['primary']}!important;transition:fill 0.5s ease}}
 .orion-badge{{display:inline-block;font-size:.7rem;padding:4px 10px;border-radius:12px;margin-bottom:10px;margin-right:6px;font-weight:600;background-color:{T['badge_bg']};color:{T['badge_text']};border:1px solid {T['border']};transition:all 0.5s ease}}
