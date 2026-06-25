@@ -1,8 +1,8 @@
-streamlit>=1.38.0
+streamlit
 google-generativeai
 groq
-Pillow
+gtts
+pillow
 pytz
-duckduckgo_search
-pandas
-gTTS
+requests
+openai
