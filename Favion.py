@@ -27,7 +27,7 @@ if "selected_model" not in ss: ss.selected_model = "gemini"
 
 MAX_CHAT = 100
 IS_DARK = not (6 <= datetime.now(pytz.timezone('Asia/Jakarta')).hour < 18)
-T = {"bg": "#0A0A0B" if IS_DARK else "#FFFFFF", "chat_bg": "#18181B" if IS_DARK else "#F4F4F5", "user_bg": "#27272A" if IS_DARK else "#E4E4E7", "text": "#E4E4E7" if IS_DARK else "#18181B", "border": "#27272A" if IS_DARK else "#E4E4E7", "badge_bg": "#18181B" if IS_DARK else "#F4F4F5", "badge_text": "#A1AA" if IS_DARK else "#71717A", "primary": "#A78BFA"}
+T = {"bg": "#0A0A0B" if IS_DARK else "#FFFFFF", "chat_bg": "#18181B" if IS_DARK else "#F4F4F5", "user_bg": "#27272A" if IS_DARK else "#E4E4E7", "text": "#E4E4E7" if IS_DARK else "#18181B", "border": "#27272A" if IS_DARK else "#E4E4E7", "badge_bg": "#18181B" if IS_DARK else "#F4F4F5", "badge_text": "#A1A1AA" if IS_DARK else "#71717A", "primary": "#A78BFA"}
 BLACKLIST = ["bom","senjata","bunuh","bunuh diri","teroris","narkoba","bokep","hentai","porn","seks","sex","bugil","telanjang","memek","jembut","kontol","ngentot","coli","masturbasi","ganja","sabu","ekstasi","heroin","kokain"]
 
 def cek_sensitif(t):
@@ -40,11 +40,11 @@ st.markdown(f"""<style>
 html,body,[class*="css"]{{font-family:'Inter',sans-serif;transition:background-color 0.5s ease,color 0.5s ease}}
 #MainMenu,footer,header{{visibility:hidden}}
 .stApp,.main{{background-color:{T['bg']};transition:background-color 0.5s ease}}
-.block-container{{padding-top:1rem!important;padding-bottom:280px!important;max-width:48rem!important}}
+.block-container{{padding-top:1rem!important;padding-bottom:300px!important;max-width:48rem!important}}
 .orion-logo{{position:fixed;top:16px;right:16px;z-index:999;width:32px;height:32px}}
 .orion-logo img{{border-radius:8px;transition:all 0.5s ease}}
 .chat-counter{{position:fixed;top:60px;right:16px;z-index:999;background:{T['chat_bg']};border:1px solid {T['border']};border-radius:20px;padding:6px 14px;font-size:0.8rem;color:{T['badge_text']};font-weight:600;transition:all 0.5s ease}}
-.stButton>button[data-testid="scroll-btn"]{{position:fixed!important;bottom:200px!important;right:20px!important;width:36px!important;height:36px!important;background:{T['chat_bg']}!important;border:1px solid {T['border']}!important;border-radius:50%!important;z-index:998!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 2px 8px rgba(0,0,0,.25)!important;padding:0!important;min-height:36px!important;transition:all 0.5s ease}}
+.stButton>button[data-testid="scroll-btn"]{{position:fixed!important;bottom:160px!important;right:20px!important;width:36px!important;height:36px!important;background:{T['chat_bg']}!important;border:1px solid {T['border']}!important;border-radius:50%!important;z-index:998!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 2px 8px rgba(0,0,0,.25)!important;padding:0!important;min-height:36px!important;transition:all 0.5s ease}}
 .meta-opening{{margin-top:15vh;margin-bottom:2rem}}
 .meta-title{{font-size:2.25rem;font-weight:700;color:{T['text']};margin-bottom:2rem;line-height:1.1;letter-spacing:-0.02em;transition:color 0.5s ease}}
 .meta-btn{{display:flex;width:100%;text-align:left;padding:16px 20px;margin-bottom:14px;background-color:{T['chat_bg']};border:1px solid {T['border']};border-radius:28px;color:{T['text']};font-size:1rem;cursor:pointer;transition:all.2s;align-items:center}}
@@ -55,16 +55,11 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif;transition:background-c
 .stChatMessage[data-testid*="assistant"] [data-testid="stChatMessageAvatar"]{{background-color:#F97316!important}}
 [data-testid="stChatMessageContent"]{{background-color:{T['chat_bg']}!important;border-radius:20px!important;padding:16px 20px!important;color:{T['text']}!important;border:1px solid {T['border']};line-height:1.7;font-size:0.95rem;margin-left:8px!important;transition:all 0.5s ease}}
 .stChatMessage[data-testid*="user"] [data-testid="stChatMessageContent"]{{background-color:{T['user_bg']}!important}}
-
-/* FIX UTAMA: Biar input gak ketiban preview file */
-.stChatInput{{position:fixed!important;bottom:85px!important;left:50%!important;transform:translateX(-50%)!important;width:calc(100% - 20px)!important;max-width:48rem!important;padding:0 1rem!important;background:transparent!important;z-index:1001!important}}
+.stChatInput{{position:fixed!important;bottom:45px!important;left:50%!important;transform:translateX(-50%)!important;width:calc(100% - 20px)!important;max-width:48rem!important;padding:0 1rem!important;background:{T['bg']}!important;z-index:1001!important;min-height:52px!important;transition:all 0.5s ease}}
 .stChatInput>div{{background-color:{T['bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:28px!important;padding:4px 8px!important;min-height:52px!important;transition:all 0.5s ease}}
 .stChatInput textarea{{font-size:1rem!important;min-height:42px!important;color:{T['text']}!important;transition:color 0.5s ease}}
-
-/* Container file upload di atas input */
-div[data-testid="stFileUploader"]{{margin-bottom:8px!important}}
-div[data-testid="stFileUploader"] > section{{background:{T['chat_bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:20px!important}}
-
+/* Fix preview file biar gak numpuk input */
+[data-testid="stFileUploader"]{{margin-bottom:8px!important}}
 /* Tombol + Upload: MERAH, dipencet jadi PUTIH */
 .stChatInput button[kind="secondary"] svg{{fill:#EF4444!important;transition:fill 0.2s ease}}
 .stChatInput button[kind="secondary"]:active svg{{fill:#FFFFFF!important}}
@@ -277,7 +272,7 @@ if prompt:
     if ss.chat_count >= MAX_CHAT: st.error("Sesi ngobrol hari ini sudah habis. Silakan kembali besok 🙏"); st.stop()
     ss.chat_count += 1
     user_text = prompt.text if hasattr(prompt, 'text') else (prompt.get("text", "") if isinstance(prompt, dict) else prompt)
-    user_file = prompt.files[0] if hasattr(prompt, 'files') and prompt.files else (prompt.get("files", [None])[0] if isinstance(prompt, dict) and prompt.get("files") else None)
+    user_file = prompt.files[0] if hasattr(prompt, 'files') and prompt.files else (prompt.get("files", [None])[0] if isinstance(prompt, dict) and prompt.get("files") else None)  # <- Kurung tutup udah bener
     user_img = None
     if user_file: user_img = Image.open(user_file).convert("RGB"); ss.messages.append({"role": "user", "type": "image", "content": user_img})
     if user_text: ss.messages.append({"role": "user", "type": "text", "content": user_text})
@@ -285,4 +280,7 @@ if prompt:
     for tipe, konten, *rest in hasil:
         tingkat = rest[0] if rest else "ngobrol"
         model = rest[1] if len(rest) > 1 else ss.selected_model
-        ss.messages.append({"role": "assistant", "type": tipe, "content": konten, "tingkat": tingkat, "model": mode
+        ss.messages.append({"role": "assistant", "type": tipe, "content": konten, "tingkat": tingkat, "model": model})
+    st.rerun()
+
+st.markdown('<div class="footer-fnl">falio™ is product of F.N.L</div>', unsafe_allow_html=True)
