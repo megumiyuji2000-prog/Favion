@@ -54,11 +54,12 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif}}
 .stChatMessage[data-testid*="assistant"] [data-testid="stChatMessageAvatar"]{{background-color:#F97316!important}}
 [data-testid="stChatMessageContent"]{{background-color:{T['chat_bg']}!important;border-radius:20px!important;padding:16px 20px!important;color:{T['text']}!important;border:1px solid {T['border']};line-height:1.7;font-size:0.95rem;margin-left:8px!important}}
 .stChatMessage[data-testid*="user"] [data-testid="stChatMessageContent"]{{background-color:{T['user_bg']}!important}}
-.stChatInput{{position:fixed!important;bottom:30px!important;left:50%!important;transform:translateX(-50%)!important;width:100%!important;max-width:48rem!important;padding:0 70px 0 1rem!important;background:{T['bg']}!important;z-index:1001!important}}
-.stChatInput>div{{background-color:{T['bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:28px!important;padding:2px!important}}
+.stChatInput{{position:fixed!important;bottom:35px!important;left:50%!important;transform:translateX(-50%)!important;width:100%!important;max-width:48rem!important;padding:0 70px 0 1rem!important;background:{T['bg']}!important;z-index:1001!important;height:48px!important}}
+.stChatInput>div{{background-color:{T['bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:28px!important;padding:4px 8px!important;height:48px!important}}
+.stChatInput textarea{{font-size:1rem!important}}
 .orion-badge{{display:inline-block;font-size:.7rem;padding:4px 10px;border-radius:12px;margin-bottom:10px;margin-right:6px;font-weight:600;background-color:{T['badge_bg']};color:{T['badge_text']};border:1px solid {T['border']}}}
 .model-badge{{background:#A78BFA;color:white}}
-.footer-fnl{{position:fixed;bottom:30px;left:20px;transform:none;font-size:0.7rem;color:{T['badge_text']};z-index:1000}}
+.footer-fnl{{position:fixed;bottom:5px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:{T['badge_text']};z-index:1000}}
 .typing-indicator{{display:flex;align-items:center;gap:12px;padding:12px 4px;height:40px}}
 .typing-indicator span{{width:12px;height:12px;background-color:#000;border-radius:50%;display:inline-block;animation:wave 1.8s infinite ease-in-out}}
 .typing-indicator span:nth-child(1){{animation-delay:0s}}
