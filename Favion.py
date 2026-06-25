@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 from groq import Groq
+from openai import OpenAI
 from PIL import Image
 from datetime import datetime
 import pytz, time, requests, io, urllib.parse, base64, re
@@ -15,6 +16,7 @@ st.set_page_config(page_title="Falio AI", page_icon="logo.png", layout="wide", i
 try:
     GEMINI_KEY = st.secrets["GEMINI_API_KEY"]
     GROQ_KEY = st.secrets["GROQ_API_KEY"]
+    DEEPSEEK_KEY = st.secrets["DEEPSEEK_API_KEY"]
 except: st.error("API Key belum diisi. Manage app → Settings → Secrets"); st.stop()
 
 ss = st.session_state
@@ -57,12 +59,10 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif;transition:background-c
 .stChatInput{{position:fixed!important;bottom:45px!important;left:50%!important;transform:translateX(-50%)!important;width:calc(100% - 20px)!important;max-width:48rem!important;padding:0 1rem!important;background:{T['bg']}!important;z-index:1001!important;height:52px!important;transition:all 0.5s ease}}
 .stChatInput>div{{background-color:{T['bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:28px!important;padding:4px 8px!important;height:52px!important;transition:all 0.5s ease}}
 .stChatInput textarea{{font-size:1rem!important;min-height:42px!important;color:{T['text']}!important;transition:color 0.5s ease}}
-
 /* Tombol + Upload: MERAH, dipencet jadi PUTIH */
 .stChatInput button[kind="secondary"] svg{{fill:#EF4444!important;transition:fill 0.2s ease}}
 .stChatInput button[kind="secondary"]:active svg{{fill:#FFFFFF!important}}
 .stChatInput button[kind="secondary"]:hover svg{{fill:#DC2626!important}}
-
 /* Tombol send */
 .stChatInput button[kind="primary"] svg{{fill:{T['primary']}!important;transition:fill 0.5s ease}}
 .orion-badge{{display:inline-block;font-size:.7rem;padding:4px 10px;border-radius:12px;margin-bottom:10px;margin-right:6px;font-weight:600;background-color:{T['badge_bg']};color:{T['badge_text']};border:1px solid {T['border']};transition:all 0.5s ease}}
@@ -86,6 +86,7 @@ st.markdown(f'<div class="chat-counter">waktu ngobrol {ss.chat_count}/{MAX_CHAT}
 genai.configure(api_key=GEMINI_KEY)
 gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 groq_client = Groq(api_key=GROQ_KEY)
+deepseek_client = OpenAI(api_key=DEEPSEEK_KEY, base_url="https://api.deepseek.com")
 
 def toast(msg, icon="🎯"): st.toast(msg, icon=icon)
 
@@ -174,17 +175,27 @@ def kirim_ke_ai(prompt, image=None):
     loading_placeholder = st.empty()
     with loading_placeholder.container():
         with st.chat_message("assistant"): st.markdown('<div class="typing-indicator"><span></span><span></div>', unsafe_allow_html=True)
-    models = [ss.selected_model, "groq" if ss.selected_model == "gemini" else "gemini"]; result = None
-    for try_model in models:
+    
+    model_order = [ss.selected_model]
+    if ss.selected_model == "gemini": model_order += ["groq", "deepseek"]
+    elif ss.selected_model == "groq": model_order += ["gemini", "deepseek"]
+    else: model_order += ["gemini", "groq"]
+    
+    result = None
+    for try_model in model_order:
         try:
             if try_model == "gemini":
                 toast("Pake Gemini...", "✨"); content = [full_p]
                 if image: content.append(image)
                 res = gemini_model.generate_content(content, stream=True)
                 full_text = "".join([c.text for c in res if c.text])
-            else:
+            elif try_model == "groq":
                 toast("Pake Groq...", "⚡")
                 chat = groq_client.chat.completions.create(messages=[{"role": "user", "content": full_p}], model="llama-3.3-70b-versatile", stream=True)
+                full_text = "".join([c.choices[0].delta.content for c in chat if c.choices[0].delta.content])
+            else:  # deepseek
+                toast("Pake DeepSeek...", "🚀")
+                chat = deepseek_client.chat.completions.create(messages=[{"role": "user", "content": full_p}], model="deepseek-chat", stream=True)
                 full_text = "".join([c.choices[0].delta.content for c in chat if c.choices[0].delta.content])
             if full_text: result = [("text", full_text, tingkat, try_model)]; break
         except Exception as e:
@@ -192,14 +203,14 @@ def kirim_ke_ai(prompt, image=None):
             if "401" in err: toast("API Key salah/expired", "❌")
             elif "429" in err: toast("Limit abis, coba model lain...", "⚠️")
             elif "quota" in err.lower(): toast("Quota abis", "⚠️")
-            if try_model == models[-1]: result = [("text", f"Error: {err[:80]}. Cek API Key di Secrets.", "ngobrol")]
+            if try_model == model_order[-1]: result = [("text", f"Error: {err[:80]}. Cek API Key di Secrets.", "ngobrol")]
     loading_placeholder.empty()
     return result if result else [("text", "Error gak dikenal.", "ngobrol")]
 
 with st.sidebar:
     st.markdown("### ⚙️ Manage Falio")
-    m = st.selectbox("Pilih Model AI", ["Gemini 2.5 Flash", "Llama 3.3 70B Groq"], index=0 if ss.selected_model == "gemini" else 1)
-    ss.selected_model = "gemini" if m == "Gemini 2.5 Flash" else "groq"
+    m = st.selectbox("Pilih Model AI", ["Gemini 2.5 Flash", "Llama 3.3 70B Groq", "DeepSeek-V3"], index=["gemini","groq","deepseek"].index(ss.selected_model))
+    ss.selected_model = {"Gemini 2.5 Flash":"gemini", "Llama 3.3 70B Groq":"groq", "DeepSeek-V3":"deepseek"}[m]
     if st.button("🗑️ Hapus Semua Chat"): ss.messages = []; ss.chat_count = 0; st.rerun()
     st.metric("Chat Tersisa", f"{MAX_CHAT - ss.chat_count}/{MAX_CHAT}")
 
@@ -213,8 +224,8 @@ for i, msg in enumerate(ss.messages):
         if msg["role"] == "assistant":
             bc = msg.get("tingkat", "ngobrol")
             bt = {"image": "🎨 GAMBAR", "remix": "✨ REMIX", "ngobrol": "💬 NGOBROL", "problem_solver": "💡 SOLUSI"}.get(bc, "💬")
-            model = "Gemini" if msg.get("model") == "gemini" else "Groq"
-            st.markdown(f'<div class="orion-badge {bc}">{bt}</div><div class="orion-badge model-badge">{model}</div>', unsafe_allow_html=True)
+            model_name = {"gemini":"Gemini", "groq":"Groq", "deepseek":"DeepSeek"}.get(msg.get("model"), "AI")
+            st.markdown(f'<div class="orion-badge {bc}">{bt}</div><div class="orion-badge model-badge">{model_name}</div>', unsafe_allow_html=True)
         if msg["type"] == "image":
             st.image(msg["content"], use_container_width=True)
             st.download_button("📥 Unduh", image_to_bytes(msg["content"]), f"falio_{i}.png", "image/png", key=f"dl_{i}", use_container_width=True)
