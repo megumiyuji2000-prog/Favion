@@ -158,7 +158,7 @@ def image_to_bytes(img):
 
 def kirim_ke_ai(prompt, image=None):
     is_sensitif, kata = cek_sensitif(prompt)
-    if is_sensitif and ss.mode!= "aib": return [("text", f"Maaf, aku gak bisa bantu soal '{kata}' ya. Itu termasuk konten sensitif/berbahaya.\n\nKalau kamu lagi ada masalah, coba ngobrol sama orang dewasa yang kamu percaya. Aku bisa bantu topik lain yang positif kok!", "ngobrol")]
+    if is_sensitif and ss.mode != "aib": return [("text", f"Maaf, aku gak bisa bantu soal '{kata}' ya. Itu termasuk konten sensitif/berbahaya.\n\nKalau kamu lagi ada masalah, coba ngobrol sama orang dewasa yang kamu percaya. Aku bisa bantu topik lain yang positif kok!", "ngobrol")]
     
     tingkat = deteksi_tingkat(prompt)
     if tingkat == "image": img, err = generate_gambar(prompt); return [("image", img, tingkat)] if img else [("text", f"Gagal membuat gambar: {err}", "ngobrol")]
@@ -167,7 +167,6 @@ def kirim_ke_ai(prompt, image=None):
     perlu_link = butuh_link_produk(prompt); keyword = extract_keyword_produk(prompt) if perlu_link else ""
     tgl = datetime.now(pytz.timezone('Asia/Jakarta')).strftime('%d %B %Y')
     
-    # System prompt berdasarkan mode
     if ss.mode == "aib":
         sys_p = f"""Anda adalah Falio AI dalam Mode Ngobrolin Aib. Tugasmu jadi temen nongkrong yang gak judge. Tanggal: {tgl}.
 
@@ -284,7 +283,7 @@ with st.sidebar:
     if st.button("💸 Dukun Harga", use_container_width=True): ss.mode = "dukun"; st.rerun()
     st.markdown("---")
     if st.button("🗑️ Hapus Semua Chat"): ss.messages = []; ss.aib_chats = []; ss.chat_count = 0; st.rerun()
-    if ss.mode == "aib" and st.button("🔥 Bakar Chat Aib", use_container_width=True): ss.aib_chats = []; ss.messages = [m for m in ss.messages if m.get("mode")!= "aib"]; st.rerun()
+    if ss.mode == "aib" and st.button("🔥 Bakar Chat Aib", use_container_width=True): ss.aib_chats = []; ss.messages = [m for m in ss.messages if m.get("mode") != "aib"]; st.rerun()
     st.metric("Chat Tersisa", f"{MAX_CHAT - ss.chat_count}/{MAX_CHAT}")
 
 if not ss.messages and ss.mode == "normal":
@@ -311,5 +310,6 @@ for i, msg in enumerate(msgs):
             st.download_button("📥 Unduh", image_to_bytes(msg["content"]), f"falio_{i}.png", "image/png", key=f"dl_{i}", use_container_width=True)
         else:
             st.markdown(msg["content"], unsafe_allow_html=True)
-            if msg["role"] == "assistant" and msg["type"] == "text" and TTS and ss.mode!= "aib":
-                if st.button("🔊", key=f"tts_{i
+            if msg["role"] == "assistant" and msg["type"] == "text" and TTS and ss.mode != "aib":
+                if st.button("🔊", key=f"tts_{i}", help="Dengarkan"):
+           
