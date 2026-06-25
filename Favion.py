@@ -39,11 +39,11 @@ st.markdown(f"""<style>
 html,body,[class*="css"]{{font-family:'Inter',sans-serif}}
 #MainMenu,footer,header{{visibility:hidden}}
 .stApp,.main{{background-color:{T['bg']}}}
-.block-container{{padding-top:1rem!important;padding-bottom:220px!important;max-width:48rem!important}}
+.block-container{{padding-top:1rem!important;padding-bottom:240px!important;max-width:48rem!important}}
 .orion-logo{{position:fixed;top:16px;right:16px;z-index:999;width:32px;height:32px}}
 .orion-logo img{{border-radius:8px}}
 .chat-counter{{position:fixed;top:60px;right:16px;z-index:999;background:{T['chat_bg']};border:1px solid {T['border']};border-radius:20px;padding:6px 14px;font-size:0.8rem;color:{T['badge_text']};font-weight:600}}
-.stButton>button[data-testid="scroll-btn"]{{position:fixed!important;bottom:150px!important;right:20px!important;width:36px!important;height:36px!important;background:{T['chat_bg']}!important;border:1px solid {T['border']}!important;border-radius:50%!important;z-index:998!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 2px 8px rgba(0,0,0,.25)!important;padding:0!important;min-height:36px!important}}
+.stButton>button[data-testid="scroll-btn"]{{position:fixed!important;bottom:160px!important;right:20px!important;width:36px!important;height:36px!important;background:{T['chat_bg']}!important;border:1px solid {T['border']}!important;border-radius:50%!important;z-index:998!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 2px 8px rgba(0,0,0,.25)!important;padding:0!important;min-height:36px!important}}
 .meta-opening{{margin-top:20vh;margin-bottom:2rem}}
 .meta-title{{font-size:2.25rem;font-weight:700;color:{T['text']};margin-bottom:2.5rem;line-height:1.1;letter-spacing:-0.02em}}
 .meta-btn{{display:flex;width:100%;text-align:left;padding:16px 20px;margin-bottom:14px;background-color:{T['chat_bg']};border:1px solid {T['border']};border-radius:28px;color:{T['text']};font-size:1rem;cursor:pointer;transition:all.2s;align-items:center}}
@@ -54,9 +54,9 @@ html,body,[class*="css"]{{font-family:'Inter',sans-serif}}
 .stChatMessage[data-testid*="assistant"] [data-testid="stChatMessageAvatar"]{{background-color:#F97316!important}}
 [data-testid="stChatMessageContent"]{{background-color:{T['chat_bg']}!important;border-radius:20px!important;padding:16px 20px!important;color:{T['text']}!important;border:1px solid {T['border']};line-height:1.7;font-size:0.95rem;margin-left:8px!important}}
 .stChatMessage[data-testid*="user"] [data-testid="stChatMessageContent"]{{background-color:{T['user_bg']}!important}}
-.stChatInput{{position:fixed!important;bottom:35px!important;left:50%!important;transform:translateX(-50%)!important;width:100%!important;max-width:48rem!important;padding:0 70px 0 1rem!important;background:{T['bg']}!important;z-index:1001!important;height:48px!important}}
-.stChatInput>div{{background-color:{T['bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:28px!important;padding:4px 8px!important;height:48px!important}}
-.stChatInput textarea{{font-size:1rem!important}}
+.stChatInput{{position:fixed!important;bottom:40px!important;left:50%!important;transform:translateX(-50%)!important;width:100%!important;max-width:48rem!important;padding:0 80px 0 1rem!important;background:{T['bg']}!important;z-index:1001!important;height:50px!important}}
+.stChatInput>div{{background-color:{T['bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:28px!important;padding:4px 8px!important;height:50px!important}}
+.stChatInput textarea{{font-size:1rem!important;min-height:40px!important}}
 .orion-badge{{display:inline-block;font-size:.7rem;padding:4px 10px;border-radius:12px;margin-bottom:10px;margin-right:6px;font-weight:600;background-color:{T['badge_bg']};color:{T['badge_text']};border:1px solid {T['border']}}}
 .model-badge{{background:#A78BFA;color:white}}
 .footer-fnl{{position:fixed;bottom:5px;left:50%;transform:translateX(-50%);font-size:0.7rem;color:{T['badge_text']};z-index:1000}}
