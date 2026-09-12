@@ -10,24 +10,22 @@ try:
     TTS = True
 except: TTS = False
 
-st.set_page_config(page_title="Falio AI", page_icon="logo.png", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Falio AI", page_icon="logo.png", layout="centered", initial_sidebar_state="expanded")
 
 try:
     GEMINI_KEY = st.secrets["GEMINI_API_KEY"]; GROQ_KEY = st.secrets["GROQ_API_KEY"]; DEEPSEEK_KEY = st.secrets["DEEPSEEK_API_KEY"]
 except: st.error("API Key belum diisi."); st.stop()
 
 ss = st.session_state
-if "messages" not in ss: ss.messages = []
-if "chat_count" not in ss: ss.chat_count = 0
-if "last_prompt" not in ss: ss.last_prompt = None
-if "audio_id" not in ss: ss.audio_id = None
-if "model" not in ss: ss.model = "gemini"
-if "pending" not in ss: ss.pending = None
+for k, v in {"messages":[], "chat_count":0, "last_prompt":None, "audio_id":None, "model":"gemini", "pending":None}.items():
+    if k not in ss: ss[k] = v
 MAX_CHAT = 100
+MODELS = {"gemini":"✨ Gemini", "groq":"⚡ Groq", "deepseek":"🧠 DeepSeek"}
 
-# Deteksi tema otomatis dari jam
 DARK = not (6 <= datetime.now(pytz.timezone('Asia/Jakarta')).hour < 18)
-T = {"bg":"#0A0A0B" if DARK else "#FFF","chat":"#18181B" if DARK else "#F4F4F5","user":"#27272A" if DARK else "#E4E4E7","text":"#E4E4E7" if DARK else "#18181B","muted":"#A1A1AA" if DARK else "#71717A","border":"#27272A" if DARK else "#E4E4E7","primary":"#A78BFA"}
+T = {"bg":"#0A0A0B" if DARK else "#FFF", "chat":"#18181B" if DARK else "#F4F4F5", "user":"#27272A" if DARK else "#E4E4E7",
+     "text":"#E4E4E7" if DARK else "#18181B", "muted":"#A1A1AA" if DARK else "#71717A",
+     "border":"#27272A" if DARK else "#E4E4E7", "primary":"#A78BFA"}
 
 BLACK = ["bom","senjata","bunuh","teroris","narkoba","bokep","hentai","porn","seks","sex","bugil","telanjang","memek","kontol","ngentot","coli","masturbasi","ganja","sabu","ekstasi","heroin","kokain"]
 def cek_sensitif(t):
@@ -40,42 +38,60 @@ st.markdown(f"""<style>
 html,body,[class*="css"]{{font-family:'Inter',sans-serif;transition:background-color .3s,color .3s}}
 #MainMenu,footer,header{{visibility:hidden}}
 .stApp{{background:{T['bg']}}}
-.block-container{{padding-top:2rem!important;padding-bottom:180px!important;max-width:42rem!important;margin:auto!important}}
-.falio-head{{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem}}
+.block-container{{padding-top:1.5rem!important;padding-bottom:180px!important;max-width:42rem!important;margin:auto!important}}
+/* SIDEBAR KANAN */
+[data-testid="stSidebar"]{{left:auto!important;right:0!important;border-left:1px solid {T['border']};border-right:none!important;background:{T['chat']}}}
+[data-testid="stSidebar"] *{{color:{T['text']}}}
+[data-testid="collapsedControl"]{{left:auto!important;right:.5rem!important;top:.5rem!important}}
+/* HEADER */
+.falio-head{{display:flex;align-items:center;gap:10px}}
 .falio-head img{{width:32px;height:32px;border-radius:8px}}
-.falio-head b{{color:{T['text']};font-size:1.1rem;font-weight:700}}
+.falio-head b{{color:{T['text']};font-size:1.15rem;font-weight:700}}
+/* CHAT BUBBLES */
 .stChatMessage{{padding:.3rem 0!important}}
 [data-testid="stChatMessageContent"]{{background:{T['chat']}!important;border-radius:16px!important;padding:14px 18px!important;color:{T['text']}!important;border:1px solid {T['border']};line-height:1.7;font-size:.94rem}}
 .stChatMessage[data-testid*="user"] [data-testid="stChatMessageContent"]{{background:{T['user']}!important}}
+/* INPUT */
 .stChatInput{{position:fixed!important;bottom:20px!important;left:50%!important;transform:translateX(-50%)!important;width:calc(100% - 20px)!important;max-width:42rem!important;padding:0 1rem!important;z-index:1001!important}}
 .stChatInput>div{{background:{T['bg']}!important;border:1.5px solid {T['primary']}!important;border-radius:24px!important;padding:4px 8px!important}}
 .stChatInput textarea{{font-size:.98rem!important;color:{T['text']}!important}}
 .stChatInput button[kind="secondary"] svg{{fill:#EF4444!important}}
 .stChatInput button[kind="primary"] svg{{fill:{T['primary']}!important}}
-.welcome{{text-align:center;margin-top:8vh;margin-bottom:2rem}}
-.welcome h1{{font-size:2rem;font-weight:700;color:{T['text']};margin-bottom:.5rem}}
+/* WELCOME */
+.welcome{{text-align:center;margin-top:5vh;margin-bottom:1.5rem}}
+.welcome h1{{font-size:2rem;font-weight:700;color:{T['text']};margin-bottom:.4rem}}
 .welcome p{{color:{T['muted']};font-size:.95rem}}
-.sug-label{{color:{T['muted']};font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin:20px 0 8px;text-align:center}}
+.sug-label{{color:{T['muted']};font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin:22px 0 10px;text-align:center}}
+/* BUTTONS */
 .stButton>button{{background:{T['chat']}!important;color:{T['text']}!important;border:1px solid {T['border']}!important;border-radius:12px!important;padding:10px 14px!important;font-weight:500!important;font-size:.88rem!important;transition:all .15s!important}}
 .stButton>button:hover{{border-color:{T['primary']}!important;background:{T['user']}!important}}
+/* TYPING */
 .typing{{display:flex;gap:6px;padding:10px 0}}
 .typing span{{width:8px;height:8px;background:{T['primary']};border-radius:50%;display:inline-block;animation:w 1.4s infinite}}
-.typing span:nth-child(2){{animation-delay:.15s}}.typing span:nth-child(3){{animation-delay:.3s}}
+.typing span:nth-child(2){{animation-delay:.15s}}
+.typing span:nth-child(3){{animation-delay:.3s}}
 @keyframes w{{0%,60%,100%{{transform:translateY(0);opacity:.4}}30%{{transform:translateY(-6px);opacity:1}}}}
 .foot{{text-align:center;font-size:.68rem;color:{T['muted']};margin-top:2rem}}
-[data-testid="stSidebar"]{{background:{T['chat']}}}
-[data-testid="stSidebar"] *{{color:{T['text']}}}
+/* SELECTBOX */
+[data-baseweb="select"]>div{{background:{T['chat']}!important;border-color:{T['border']}!important;color:{T['text']}!important;border-radius:10px!important}}
+/* METRIC */
+[data-testid="stMetricValue"]{{color:{T['primary']}!important;font-size:1.4rem!important}}
 </style>""", unsafe_allow_html=True)
 
-# Header dengan logo + counter
+# HEADER + MODEL SWITCHER DI CHAT
 try:
     with open("logo.png","rb") as f: _l = base64.b64encode(f.read()).decode()
     logo_html = f'<img src="data:image/png;base64,{_l}">'
 except: logo_html = ''
 
-st.markdown(f'<div class="falio-head">{logo_html}<b>Falio AI</b></div>', unsafe_allow_html=True)
+hc1, hc2 = st.columns([3, 2])
+with hc1:
+    st.markdown(f'<div class="falio-head">{logo_html}<b>Falio AI</b></div>', unsafe_allow_html=True)
+with hc2:
+    ss.model = st.selectbox("Model", list(MODELS.keys()), format_func=lambda x: MODELS[x],
+                            index=list(MODELS.keys()).index(ss.model), label_visibility="collapsed",
+                            help="Ganti otak AI kapan saja")
 
-# Inisialisasi AI
 genai.configure(api_key=GEMINI_KEY)
 gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 groq_client = Groq(api_key=GROQ_KEY)
@@ -202,31 +218,37 @@ TEKNIS: Heading ###, bullet -, bold **teks**, link [Nama](url). Tolak konten dew
     ph.empty()
     return res or [("text","Error gak dikenal.","ngobrol", ss.model)]
 
-# ============ SIDEBAR SEDERHANA ============
+# SIDEBAR KANAN
 with st.sidebar:
-    st.markdown("### Pengaturan")
-    ml = st.selectbox("Pilih otak AI", ["Gemini (Cepat)","Groq (Ngebut)","DeepSeek (Pintar)"], index=["gemini","groq","deepseek"].index(ss.model))
-    ss.model = {"Gemini (Cepat)":"gemini","Groq (Ngebut)":"groq","DeepSeek (Pintar)":"deepseek"}[ml]
-    st.metric("Sisa chat hari ini", f"{MAX_CHAT - ss.chat_count}")
+    st.markdown("### ⚙️ Pengaturan")
+    st.metric("💬 Sisa chat hari ini", f"{MAX_CHAT - ss.chat_count}/{MAX_CHAT}")
     st.divider()
-    if st.button("🔄 Mulai Obrolan Baru", use_container_width=True):
+    if st.button("🔄 Mulai obrolan baru", use_container_width=True):
         ss.messages = []; st.rerun()
     if ss.messages:
         md = "# Obrolan Falio AI\n\n"
         for m in ss.messages:
             role = "**Kamu**" if m["role"]=="user" else "**Falio**"
             md += f"{role}: {m['content'] if m['type']=='text' else '*(gambar)*'}\n\n"
-        st.download_button("💾 Simpan Obrolan", md, file_name="falio_chat.md", use_container_width=True)
+        st.download_button("💾 Simpan obrolan", md, file_name="falio_chat.md", use_container_width=True)
+    st.divider()
+    st.markdown("**💡 Tips**")
+    st.caption("• Ganti model kapan saja di kanan atas")
+    st.caption("• Kirim suara lewat tombol 🎤")
+    st.caption("• Upload gambar lewat tombol 📎")
+    st.caption("• Falio ingat konteks obrolan")
 
-# ============ AREA CHAT ============
+# AREA CHAT
 if not ss.messages:
     st.markdown('<div class="welcome"><h1>Halo! 👋</h1><p>Aku Falio AI, siap bantu kamu hari ini.</p></div>', unsafe_allow_html=True)
     st.markdown('<div class="sug-label">Coba tanya ini</div>', unsafe_allow_html=True)
-    sugs = [("🖼️","Buat gambar kucing astronot"),("💡","Cara atasi laptop lemot"),("🎓","Jelaskan AI dengan analogi sederhana"),("✍️","Tulis caption IG soal produktivitas")]
+    sugs = [("🖼️","Buat gambar kucing astronot"),("💡","Cara atasi laptop lemot"),
+            ("🎓","Jelaskan AI dengan analogi sederhana"),("✍️","Tulis caption IG soal produktivitas")]
     c1, c2 = st.columns(2)
     for i, (ic, txt) in enumerate(sugs):
         with (c1 if i%2==0 else c2):
-            if st.button(f"{ic}  {txt}", key=f"sg_{i}", use_container_width=True): ss.pending = txt; st.rerun()
+            if st.button(f"{ic}  {txt}", key=f"sg_{i}", use_container_width=True):
+                ss.pending = txt; st.rerun()
 
 for i, m in enumerate(ss.messages):
     with st.chat_message(m["role"]):
@@ -235,11 +257,15 @@ for i, m in enumerate(ss.messages):
             st.download_button("📥 Unduh gambar", img_bytes(m["content"]), f"falio_{i}.png", "image/png", key=f"dl_{i}", use_container_width=True)
         else:
             st.markdown(m["content"], unsafe_allow_html=True)
-            if m["role"] == "assistant" and TTS:
-                if st.button("🔊 Dengarkan", key=f"tts_{i}"):
-                    for a in tts(m["content"]): st.audio(a, format='audio/mp3')
+            if m["role"] == "assistant":
+                used = MODELS.get(m.get("model"), "AI")
+                a1, a2 = st.columns([4, 1])
+                with a1: st.caption(f"🤖 dijawab oleh {used}")
+                with a2:
+                    if TTS and st.button("🔊", key=f"tts_{i}", help="Dengarkan"):
+                        for a in tts(m["content"]): st.audio(a, format='audio/mp3')
 
-# ============ INPUT ============
+# INPUT
 av = st.audio_input("🎤 Rekam suara", key=f"au_{ss.chat_count}", label_visibility="collapsed")
 if av and ss.audio_id != id(av):
     ss.audio_id = id(av)
@@ -251,7 +277,8 @@ if ss.pending and not p:
     p = type("P", (), {"text": ss.pending, "files": None})(); ss.pending = None
 
 if p:
-    if ss.chat_count >= MAX_CHAT: st.error("Sesi hari ini habis. Kembali besok 🙏"); st.stop()
+    if ss.chat_count >= MAX_CHAT:
+        st.error("Sesi hari ini habis. Kembali besok 🙏"); st.stop()
     ss.chat_count += 1
     utext = getattr(p, "text", None) or ""
     ufiles = getattr(p, "files", None)
